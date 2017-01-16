@@ -1,9 +1,9 @@
-src-git turrispackages https://gitlab.labs.nic.cz/turris/turris-os-packages.git^001a32abfd8e261b1373b1a56711e12a0c7689ce
-src-git lucics https://gitlab.labs.nic.cz/turris/luci-cs.git^7d1985286660e6db4b662c9f5c4cdadf985a3d69
-src-git packages https://github.com/openwrt/packages.git^5fdb011c357c3b79bbb19d934b57cfed2ff00aa0
-src-git routing https://github.com/openwrt-routing/packages.git^a4eae82c155079a4372e4b910ec733f77288b717
-src-git management https://github.com/openwrt-management/packages.git^3a3acd14c77156f8f67cf491263a027a2d483bfd
-src-git telephony https://github.com/openwrt/telephony.git^5ece22d67e79cdd5dffa9301df61393442f21314
+src-git turrispackages https://gitlab.labs.nic.cz/turris/turris-os-packages.git^3ed430106dd5683e062777d6a91ea62e8ad55cbf
+src-git lucics https://gitlab.labs.nic.cz/turris/luci-cs.git^495a67f0c4c18b493215312b14d7aa9ade504b77
+src-git packages https://github.com/openwrt/packages.git^ae19abe3305edfd8d8fd086f157c96e6450e5e40
+src-git routing https://github.com/openwrt-routing/packages.git^6e134b104414dd656c986152aace8f4731f871b8
+src-git management https://github.com/openwrt-management/packages.git^9640382381e011cdfdeab74812f8ffd0fe17ca17
+src-git telephony https://github.com/openwrt/telephony.git^1f0fb2538ba6fc306198fe2a9a4b976d63adb304
 src-git printing https://github.com/miska/openwrt-printing-packages.git^9c305e35dcf4c620c01ad426c61d9c720dbd91ed
 
 #src-git oldpackages http://git.openwrt.org/14.07/packages.git

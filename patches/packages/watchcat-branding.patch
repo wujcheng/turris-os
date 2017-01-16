@@ -6,7 +6,7 @@ index 9160cff0..fff7c4a1 100644
  
  PKG_NAME:=watchcat
  PKG_VERSION:=1
--PKG_RELEASE:=5
+-PKG_RELEASE:=6
 +PKG_RELEASE:=7
  
  PKG_MAINTAINER:=Roger D <rogerdammit@gmail.com>

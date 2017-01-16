@@ -1,3 +1,5 @@
+* php: Drop php5 in favor of php7
+* kernel: include SUSE btrfs patches and CPUFreq patches
 * cznic-cacert-bundle: Drop old ucollect certificate (server already switched)
 * kernel: updated to the last available version
 * lighttpd: updated and cleaned up, disabled mod_mysql_vhost

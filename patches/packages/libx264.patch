@@ -1,0 +1,13 @@
+diff --git a/libs/libx264/Makefile b/libs/libx264/Makefile
+index dbb7543b..95220944 100644
+--- a/libs/libx264/Makefile
++++ b/libs/libx264/Makefile
+@@ -31,7 +31,7 @@ MAKE_FLAGS+= LD="$(TARGET_CC) -o"
+ # AMD Geode LX and i486 do not have SSE
+ CPU_ASM_BLACKLIST:=geode i486 arm920t arm926ej-s arm1136j-s arm1176jzf-s fa526 mpcore xscale
+ 
+-ifneq ($(CONFIG_SOFT_FLOAT)$(findstring $(call qstrip,$(CONFIG_CPU_TYPE)),$(CPU_ASM_BLACKLIST)),)
++ifneq ($(CONFIG_SOFT_FLOAT)$(CONFIG_TARGET_mpc85xx)$(findstring $(call qstrip,$(CONFIG_CPU_TYPE)),$(CPU_ASM_BLACKLIST)),)
+   CONFIGURE_VARS+= AS= 
+   MAKE_FLAGS+= AS= 
+   CONFIGURE_ARGS += --disable-asm

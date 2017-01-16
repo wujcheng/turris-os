@@ -131,7 +131,7 @@ index 210f030..b1d16a4 100644
    CATEGORY:=LuCI
    SUBMENU:=3. Applications
    TITLE:=LXC management Web UI
--  DEPENDS:=+luci-mod-admin-full +lxc +lxc-create +liblxc +rpcd-mod-lxc
+-  DEPENDS:=+luci-mod-admin-full +lxc +lxc-create +liblxc +rpcd-mod-lxc +getopt +xz
 +  DEPENDS:=+luci-mod-admin-full +lxc +lxc-create +liblxc +rpcd-mod-lxc +getopt +xz +gnupg +gnupg-utils +ethtool
    MAINTAINER:=Petar Koretic <petar.koretic@sartura.hr>
  endef
