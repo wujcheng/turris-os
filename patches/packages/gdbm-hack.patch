@@ -1,0 +1,21 @@
+diff --git a/libs/gdbm/Makefile b/libs/gdbm/Makefile
+index a8d1926c..8922baa9 100644
+--- a/libs/gdbm/Makefile
++++ b/libs/gdbm/Makefile
+@@ -46,6 +46,16 @@ CONFIGURE_ARGS += \
+ 	--enable-shared \
+ 	--enable-static \
+ 
++define gettext_version_hack
++	(cd $(PKG_BUILD_DIR) && \
++		$(STAGING_DIR_HOST)/bin/sed \
++			-i $(PKG_BUILD_DIR)/po/Makefile.in.in \
++			-e "s/^GETTEXT_MACRO_VERSION = .*/GETTEXT_MACRO_VERSION = 0.19/g" \
++	);
++endef
++
++Hooks/Configure/Pre += gettext_version_hack
++
+ define Build/Compile
+ 	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) \
+ 		BINOWN=`id -u` \
