@@ -19,9 +19,6 @@ PKG_MD5SUM:=d42b97f6ef5dd0ba4469d520ed732fed
 PKG_BUILD_DIR:=$(BUILD_DIR)/libiconv-$(PKG_VERSION)
 HOST_BUILD_DIR:=$(BUILD_DIR)/host/libiconv-$(PKG_VERSION)
 
-PKG_FIXUP:=patch-libtool
-HOST_FIXUP:=none
-
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/host-build.mk
 
