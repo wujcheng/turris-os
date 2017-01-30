@@ -1,12 +1,18 @@
 diff --git a/net/transmission/Makefile b/net/transmission/Makefile
-index 596b71e9..ee539a40 100644
+index 596b71e9..33d142a1 100644
 --- a/net/transmission/Makefile
 +++ b/net/transmission/Makefile
-@@ -160,6 +160,7 @@ MAKE_FLAGS += \
+@@ -159,6 +159,13 @@ MAKE_FLAGS += \
+ 
  TARGET_CFLAGS += -std=gnu99
  
++define Build/Prepare
++	$(PKG_UNPACK)
++	[ ! -d ./src/ ] || $(CP) ./src/* $(PKG_BUILD_DIR)
++	rm -f $(PKG_BUILD_DIR)/m4/glib-gettext.m4
++	$(Build/Patch)
++endef
++
  define Build/Configure
-+	rm -f m4/glib-gettext.m4
  	( cd $(PKG_BUILD_DIR); ./autogen.sh $(CONFIGURE_ARGS))
  	$(call Build/Configure/Default,$CONFIGURE_ARGS)
- endef
