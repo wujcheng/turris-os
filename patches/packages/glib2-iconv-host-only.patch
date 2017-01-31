@@ -37,7 +37,7 @@ index 5bd0d1cc..966e5567 100644
  		$(PKG_INSTALL_DIR)/usr/lib/*.{so*,a,la} \
  		$(1)/usr/lib/
  
-+	sed -i 's|Libs:|Libs: -liconv"' $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/*.pc
++	sed -i 's|^Libs:|Libs: -liconv|' $(PKG_INSTALL_DIR)/usr/lib/pkgconfig/*.pc
  	$(INSTALL_DIR) $(1)/usr/lib/pkgconfig
  	$(INSTALL_DATA) \
  		$(PKG_INSTALL_DIR)/usr/lib/pkgconfig/*.pc \
