@@ -63,7 +63,8 @@ CONFIGURE_ARGS += \
 	--with-included-gettext \
 	--without-libintl-prefix \
 	--without-libexpat-prefix \
-	--without-emacs
+	--without-emacs \
+	--without-libiconv
 
 HOST_CONFIGURE_ARGS += \
 	--with-included-libxml --without-libxml2-prefix --with-included-libcroco
