@@ -10,7 +10,7 @@ index a8d1926c..8922baa9 100644
 +	(cd $(PKG_BUILD_DIR) && \
 +		$(STAGING_DIR_HOST)/bin/sed \
 +			-i $(PKG_BUILD_DIR)/po/Makefile.in.in \
-+			-e "s/^GETTEXT_MACRO_VERSION = .*/GETTEXT_MACRO_VERSION = 0.19/g" \
++			-e "s/^GETTEXT_MACRO_VERSION = .*/GETTEXT_MACRO_VERSION = 0.18/g" \
 +	);
 +endef
 +
