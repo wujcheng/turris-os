@@ -1,0 +1,13 @@
+diff --git a/cznic/libatsha204/Makefile b/cznic/libatsha204/Makefile
+index c74c5fd69..a0b153abc 100644
+--- a/cznic/libatsha204/Makefile
++++ b/cznic/libatsha204/Makefile
+@@ -86,7 +86,7 @@ endef
+ 
+ define Package/$(PKG_PYTHON_NAME)
+ 	TITLE:=$(PKG_PYTHON_NAME)
+-	DEPENDS:=+python +libatsha204
++	DEPENDS:=+python +libatsha204 +python-base
+ endef
+ 
+ define Package/$(PKG_PYTHON_NAME)/install
