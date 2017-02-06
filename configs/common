@@ -156,3 +156,4 @@ CONFIG_PACKAGE_wl18xx-firmware=m
 CONFIG_PACKAGE_transmission-cli-mbedtls=n
 CONFIG_PACKAGE_transmission-remote-mbedtls=n
 CONFIG_PACKAGE_transmission-daemon-mbedtls=n
+CONFIG_PACKAGE_lighttpd-mod-mysql_vhost=n
