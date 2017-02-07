@@ -180,7 +180,7 @@ if [ "$TARGET_BOARD" = turris ]; then
 	find -type l ! -exec test -r {} \; -delete
 	cd ../../..
 elif [ "$TARGET_BOARD" = omnia ]; then
-	mkdir bin/mvebu-musl/medkit
+	mkdir -p bin/mvebu-musl/medkit
 	MED_PATH="bin/mvebu-musl/medkit"
 	if [ -n "$BUILD_ALL" ]; then
 		FLAVOR="full"
