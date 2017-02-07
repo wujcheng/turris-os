@@ -1,0 +1,21 @@
+diff --git a/net/davfs2/Makefile b/net/davfs2/Makefile
+index 4e1f0927..53b50810 100644
+--- a/net/davfs2/Makefile
++++ b/net/davfs2/Makefile
+@@ -59,6 +59,16 @@ CONFIGURE_VARS += \
+ 
+ CONFIGURE_ARGS += --with-neon="$(STAGING_DIR)/usr"
+ 
++define gettext_version_hack
++	(cd $(PKG_BUILD_DIR) && \
++		$(STAGING_DIR_HOST)/bin/sed \
++			-i $(PKG_BUILD_DIR)/po/Makefile.in.in \
++			-e "s/^GETTEXT_MACRO_VERSION = .*/GETTEXT_MACRO_VERSION = 0.18/g" \
++	);
++endef
++
++Hooks/Configure/Pre += gettext_version_hack
++
+ define Package/davfs2/install
+ 	$(INSTALL_DIR) $(1)/usr/sbin
+ 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/mount.davfs $(1)/usr/sbin/
