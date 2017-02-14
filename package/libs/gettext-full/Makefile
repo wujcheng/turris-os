@@ -67,7 +67,7 @@ CONFIGURE_ARGS += \
 	--without-libiconv
 
 HOST_CONFIGURE_ARGS += \
-	--with-included-libxml --without-libxml2-prefix --with-included-libcroco
+	--with-included-libxml --without-libxml2-prefix --with-included-libcroco --without-libiconv
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/lib/libintl-full/include
