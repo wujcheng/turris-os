@@ -164,6 +164,10 @@ fi
 
 COMMIT_DATE="`git log --format=format:%cD -1`"
 
+if [ -d bin/targets/mvebu ]; then
+	mv bin/targets/mvebu bin/mvebu-musl
+fi
+
 if [ "$TARGET_BOARD" = turris ]; then
 	#Build initramfs
 	echo -e "CONFIG_TARGET_ROOTFS_INITRAMFS=y\nCONFIG_TARGET_INITRAMFS_COMPRESSION_XZ=y" >> .config
@@ -221,6 +225,9 @@ if [ -n "$BUILD_ALL" ] && [ "$TARGET_BOARD" = omnia ]; then
 	done
 	make_defconfig
 	make "$@" PKG_BRANCH=${PKG_BRANCH/-/}
+	if [ -d bin/targets/mvebu ]; then
+		mv bin/targets/mvebu bin/mvebu-musl
+	fi
 	mv bin/mvebu-musl/openwrt-mvebu-Turris-Omnia-rootfs.tar.gz bin-nand/mvebu-musl/medkit/omnia-medkit-`date -d "$COMMIT_DATE" +%Y%m%d%H%M`-minimal.tar.gz
 	OPKG_STATUS="`ls -1d build_dir/target-arm_*/root-mvebu*/usr/lib/opkg/status`"
 	ln -s omnia-medkit-`date -d "$COMMIT_DATE" +%Y%m%d%H%M`-minimal.tar.gz bin-nand/mvebu-musl/medkit/omnia-medkit-latest-minimal.tar.gz
@@ -294,6 +301,9 @@ elif [ "$TARGET_BOARD" = omnia ]; then
 	cp build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/root-mvebu/boot/uboot* build_dir
 	rm -f build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/root-mvebu/boot/* build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/root-mvebu/etc/rc.d/*rainbow
 	make target/linux/compile "$@"
+	if [ -d bin/targets/mvebu ]; then
+		mv bin/targets/mvebu bin/mvebu-musl
+	fi
 	cp `ls -d build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/linux-mvebu`/{zImage-initramfs,zImage-initramfs-armada-385-turris-omnia}
 	cat build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/linux-mvebu/linux-4.4*/arch/arm/boot/dts/armada-385-turris-omnia.dtb >> `ls -d build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/linux-mvebu`/zImage-initramfs-armada-385-turris-omnia
 	[ \! -d ./logs ] || mv ./logs ./logs-initram
