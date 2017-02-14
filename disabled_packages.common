@@ -5,7 +5,7 @@ usbip # depends on eudev
 batmand # needs complete repackaging
 python-cffi
 python-cryptography # depends on python-cffi
-# packages we gave on fixing right now and should be rechecked later
+# packages we gave up on fixing right now and should be rechecked later
 kamailio4
 asterisk13
 asterisk11
@@ -21,3 +21,4 @@ sysrepod
 libmraa
 libupm
 freeswitch
+syslog-ng
