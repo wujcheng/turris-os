@@ -91,6 +91,11 @@ define gettext_version_target
 			-e "s/AM_GNU_GETTEXT_VERSION(.*)/AM_GNU_GETTEXT_VERSION(\[$$$$GETTEXT_VERSION\])/g" && \
 		$(STAGING_DIR_HOST)/bin/autopoint --force \
 	);
+	(cd $(PKG_BUILD_DIR) && \
+		$(STAGING_DIR_HOST)/bin/sed \
+			-e "s/^GETTEXT_MACRO_VERSION = .*/GETTEXT_MACRO_VERSION = 0.19/g" \
+			-i `grep -Rl '^GETTEXT_MACRO_VERSION = ' $(PKG_BUILD_DIR)` \
+	);
 endef
 
 ifneq ($(filter gettext-version,$(PKG_FIXUP)),)
