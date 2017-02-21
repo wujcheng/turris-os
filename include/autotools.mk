@@ -84,18 +84,7 @@ define patch_libtool_target
 endef
 
 define gettext_version_target
-	(cd $(PKG_BUILD_DIR) && \
-		GETTEXT_VERSION=$(shell $(STAGING_DIR_HOST)/bin/gettext -V | $(STAGING_DIR_HOST)/bin/sed -ne '1s/.* //p') && \
-		$(STAGING_DIR_HOST)/bin/sed \
-			-i $(PKG_BUILD_DIR)/configure.ac \
-			-e "s/AM_GNU_GETTEXT_VERSION(.*)/AM_GNU_GETTEXT_VERSION(\[$$$$GETTEXT_VERSION\])/g" && \
-		$(STAGING_DIR_HOST)/bin/autopoint --force \
-	);
-	(cd $(PKG_BUILD_DIR) && \
-		$(STAGING_DIR_HOST)/bin/sed \
-			-e "s/^GETTEXT_MACRO_VERSION = .*/GETTEXT_MACRO_VERSION = 0.19/g" \
-			-i `grep -Rl '^GETTEXT_MACRO_VERSION = ' $(PKG_BUILD_DIR)` \
-	);
+	(cd $(PKG_BUILD_DIR) && $(STAGING_DIR_HOST)/bin/gettextize -f --no-changelog );
 endef
 
 ifneq ($(filter gettext-version,$(PKG_FIXUP)),)
