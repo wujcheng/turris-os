@@ -23,7 +23,7 @@ PKG_LICENSE:=GPL-3.0+
 PKG_FIXUP:=autoreconf
 PKG_INSTALL:=1
 PKG_BUILD_PARALLEL:=0
-PKG_BUILD_DEPENDS:=gettext-full/host
+PKG_BUILD_DEPENDS:=gettext-full/host libiconv-full/host
 PKG_CHECK_FORMAT_SECURITY:=0
 
 include $(INCLUDE_DIR)/package.mk
@@ -39,7 +39,7 @@ endef
 define Package/gettext
   SECTION:=utils
   CATEGORY:=Utilities
-  DEPENDS:=+libintl-full
+  DEPENDS:=+libintl-full +libiconv-full
   TITLE:=GNU Internationalization library
   URL:=http://www.gnu.org/software/gettext/
 endef
@@ -64,10 +64,9 @@ CONFIGURE_ARGS += \
 	--without-libintl-prefix \
 	--without-libexpat-prefix \
 	--without-emacs \
-	--without-libiconv
 
 HOST_CONFIGURE_ARGS += \
-	--with-included-libxml --without-libxml2-prefix --with-included-libcroco --without-libiconv
+	--with-included-libxml --without-libxml2-prefix --with-included-libcroco
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/lib/libintl-full/include
