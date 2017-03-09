@@ -23,7 +23,7 @@ PKG_LICENSE:=GPL-3.0+
 PKG_FIXUP:=autoreconf
 PKG_INSTALL:=1
 PKG_BUILD_PARALLEL:=0
-PKG_BUILD_DEPENDS:=gettext-full/host libiconv-full/host
+PKG_BUILD_DEPENDS:=libiconv-full/host gettext-full/host
 PKG_CHECK_FORMAT_SECURITY:=0
 
 include $(INCLUDE_DIR)/package.mk
