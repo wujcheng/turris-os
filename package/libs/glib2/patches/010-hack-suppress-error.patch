@@ -1,0 +1,17 @@
+--- a/glib/gconvert.c
++++ b/glib/gconvert.c
+@@ -50,7 +50,7 @@
+ #include "gfileutils.h"
+
+ #include "glibintl.h"
+-
++/*
+ #if defined(USE_LIBICONV_GNU) && !defined (_LIBICONV_H)
+ #error GNU libiconv in use but included iconv.h not from libiconv
+ #endif
+@@ -58,7 +58,7 @@
+      && !defined (__APPLE_CC__) && !defined (__LP_64__)
+ #error GNU libiconv not in use but included iconv.h is from libiconv
+ #endif
+-
++*/
