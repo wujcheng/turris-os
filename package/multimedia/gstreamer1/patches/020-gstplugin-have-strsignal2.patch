@@ -1,0 +1,13 @@
+--- a/libs/gst/check/libcheck/libcompat.h
++++ b/libs/gst/check/libcheck/libcompat.h
++++ openwrt/build_dir/target-arm_cortex-a9+vfpv3_musl-1.1.15_eabi/gstreamer-1.8.
+@@ -100,9 +100,9 @@ CK_DLL_EXP char *strdup (const char *str
+ #define strdup _strdup
+ #endif /* !HAVE_DECL_STRDUP && HAVE__STRDUP */
+
+-#if !HAVE_DECL_STRSIGNAL
+-CK_DLL_EXP char *strsignal (int sig);
+-#endif /* !HAVE_DECL_STRSIGNAL */
++// #if !HAVE_DECL_STRSIGNAL
++// CK_DLL_EXP char *strsignal (int sig);
++// #endif /* !HAVE_DECL_STRSIGNAL */
