@@ -9,6 +9,8 @@
 [ -d ./logs-nor ] && rm -rf ./logs-nor
 [ -d ./logs-initram ] && rm -rf ./logs-initram
 
+date >./log_build_script.txt
+
 export TMPDIR="$PWD/tmp"
 mkdir $TMPDIR
 
