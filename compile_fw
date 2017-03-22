@@ -36,6 +36,7 @@ make_defconfig() {
 # Clean feeds
 ./scripts/feeds clean
 ./scripts/feeds update -a
+echo "Debug-1">>./log_build_script.txt
 # Patch feeds
 pushd patches
 for feed in *; do
@@ -49,15 +50,17 @@ for feed in *; do
 done
 popd
 ./scripts/feeds install -a
+echo "Debug-2">>./log_build_script.txt
 
 # Uninstall broken pkgs
 ./scripts/feeds uninstall \
 $([ \! -f ./disabled_packages.common ] || echo $(cut -d '#' -f1 ./disabled_packages.common)) \
 $([ \! -f ./disabled_packages.$TARGET_BOARD ] || echo $(cut -d '#' -f1 ./disabled_packages.$TARGET_BOARD))
 
-
+echo "Debug-3">>./log_build_script.txt
 # Override packages release numbers
 scripts/override_release_numbers.sh
+echo "Debug-4">>./log_build_script.txt
 
 # Build NAND FW
 [ -z "$OPENWRT_BRANCH"  ] || PKG_BRANCH="-$OPENWRT_BRANCH"
@@ -65,6 +68,7 @@ scripts/override_release_numbers.sh
 cat configs/common configs/$TARGET_BOARD | sed -e "s|@BOARD@|$TARGET_BOARD|" -e "s|@BRANCH@|$PKG_BRANCH|" > .config
 [ -n "$BUILD_ALL" ] && echo "CONFIG_ALL=y" >> .config && echo "CONFIG_SDK=y" >> .config
 echo CONFIG_ALL_KMODS=y >> .config
+echo "Debug-5">>./log_build_script.txt
 
 # Include important userlists
 # Base list generation
@@ -74,7 +78,11 @@ Repository 'turris' 'https://api.turris.cz/openwrt-repo/${TARGET_BOARD}${REAL_PK
 	subdirs = {'base', $(echo $(sed -n 's|^src-git[[:blank:]]\+\([^[:blank:]]*\)[[:blank:]]\+http.*|\1|p' ./feeds.conf.default) | sed -e 's|\([^[:blank:]]\+\)|'"'\\1'|g" -e 's|\ |,\ |g')}
 }
 EOF
+echo "Debug-6">>./log_build_script.txt
+
 if [ -z "$BUILD_ALL" ]; then
+echo "Debug-7">>./log_build_script.txt
+
 cat >> base.lua << EOF
 
 -- The fallback repository
@@ -85,6 +93,7 @@ Repository 'turris-fallback' 'https://api.turris.cz/openwrt-repo/${TARGET_BOARD}
 }
 EOF
 fi
+echo "Debug-8">>./log_build_script.txt
 cat >> base.lua << EOF
 
 -- Make sure the updater is up to date before continuing
@@ -94,6 +103,7 @@ Install 'userlists' { critical = true }
 
 -- Install everything that was in the image
 EOF
+echo "Debug-9">>./log_build_script.txt
 # Other lists
 echo 'config pkglists pkglists' > package/feeds/turrispackages/opkg-trans/files/updater.config
 for i in lists/*.list; do
@@ -116,59 +126,75 @@ for i in lists/*.list; do
 		fi
 	done
 done
+echo "Debug-10">>./log_build_script.txt
 
 [ -n "$USE_CCACHE" ] && echo "CONFIG_CCACHE=y" >> .config
 
-
 if [ -f "$HOME"/mime.key ]; then
+	echo "Debug-11">>./log_build_script.txt
 	echo "CONFIG_SIGNED_PACKAGES=y" >> .config
 	rm -f key-build key-build.pub
 	cp "$HOME/mime.key" key-build
 	cp "$HOME/mime.pub" key-build.pub
 fi
 
+echo "Debug-12">>./log_build_script.txt
 
 [ "${TARGET_BOARD}" = omnia ] || echo "CONFIG_PACKAGE_updater-ng=m" >> ./.config
 
 make_defconfig
+echo "Debug-13">>./log_build_script.txt
 
 if [ -d .git ] ; then
+	echo "Debug-14">>./log_build_script.txt
+
 	git log -n1 --format='%H' >files/etc/git-version
 fi
 
 make clean
-
+echo "Debug-15">>./log_build_script.txt
 [ -z "$BUILD_ALL" ] || make dirclean
+echo "Debug-16">>./log_build_script.txt
 
 set -- "$@" PKG_BRANCH=${PKG_BRANCH/-/}
 
 [ -z "$PERSISTENT_CCACHE" ] || set -- "$@" CCACHE_DIR="`pwd`/ccache" CCACHE_HOST_DIR="`pwd`/ccache-host"
+echo "Debug-17">>./log_build_script.txt
 
 make "$@"
 
 if [ -n "$PRIMARY_ONLY" ] ; then
+	echo "Debug-18">>./log_build_script.txt
+
 	# If we want only the primary system and want to use the build directory for more tests, exit now
 	exit
 fi
+echo "Debug-19">>./log_build_script.txt
 
 # Nice junit export
 ./scripts/generate_junit.sh
+echo "Debug-20">>./log_build_script.txt
 
 if [ -n "`cat logs/package/error.txt 2> /dev/null`" ] && [ -z "$PKG_BRANCH" ]; then
+	echo "Debug-21">>./log_build_script.txt
 	echo "Following packages are failing in stable release"
 	cat logs/package/error.txt
 	exit 1
 fi
 
 [ \! -d ./logs ] || mv ./logs ./logs-nand
+echo "Debug-22">>./log_build_script.txt
 
 COMMIT_DATE="`git log --format=format:%cD -1`"
 
 if [ -d bin/targets/mvebu ]; then
+	echo "Debug-23">>./log_build_script.txt
 	mv bin/targets/mvebu bin/mvebu-musl
 fi
 
 if [ "$TARGET_BOARD" = turris ]; then
+	echo "Debug-24">>./log_build_script.txt
+
 	#Build initramfs
 	echo -e "CONFIG_TARGET_ROOTFS_INITRAMFS=y\nCONFIG_TARGET_INITRAMFS_COMPRESSION_XZ=y" >> .config
 	make_defconfig
@@ -184,6 +210,8 @@ if [ "$TARGET_BOARD" = turris ]; then
 	find -type l ! -exec test -r {} \; -delete
 	cd ../../..
 elif [ "$TARGET_BOARD" = omnia ]; then
+	echo "Debug-25">>./log_build_script.txt
+
 	mkdir -p bin/mvebu-musl/medkit
 	MED_PATH="bin/mvebu-musl/medkit"
 	if [ -n "$BUILD_ALL" ]; then
@@ -202,10 +230,12 @@ elif [ "$TARGET_BOARD" = omnia ]; then
 	popd
 fi
 
+echo "Debug-26">>./log_build_script.txt
 # Clean
 [ -d ./bin-nand ] && rm -rf ./bin-nand
 mv ./bin ./bin-nand
 [ -d ./tmp ] && rm -rf ./tmp
+echo "Debug-27">>./log_build_script.txt
 
 # Generate lists
 PUB_BIN_DIR="`ls -1d bin-nand/* | head -n1`"
@@ -213,6 +243,8 @@ mkdir -p $PUB_BIN_DIR/lists
 
 # On Omnia full build generate a minimal image as well and use it for base list
 if [ -n "$BUILD_ALL" ] && [ "$TARGET_BOARD" = omnia ]; then
+	echo "Debug-28">>./log_build_script.txt
+
 	make dirclean
 	cat configs/common configs/$TARGET_BOARD | sed -e "s|@BOARD@|$TARGET_BOARD|" -e "s|@BRANCH@|$PKG_BRANCH|" > .config
 	echo CONFIG_ALL_KMODS=y >> .config
@@ -223,17 +255,26 @@ if [ -n "$BUILD_ALL" ] && [ "$TARGET_BOARD" = omnia ]; then
 			echo "CONFIG_PACKAGE_$PKG=y" >> .config
 		fi
 	done
+	echo "Debug-29">>./log_build_script.txt
+
 	make_defconfig
 	make "$@" PKG_BRANCH=${PKG_BRANCH/-/}
 	if [ -d bin/targets/mvebu ]; then
+		echo "Debug-30">>./log_build_script.txt
+
 		mv bin/targets/mvebu bin/mvebu-musl
 	fi
+	echo "Debug-31">>./log_build_script.txt
+
 	mv bin/mvebu-musl/openwrt-mvebu-Turris-Omnia-rootfs.tar.gz bin-nand/mvebu-musl/medkit/omnia-medkit-`date -d "$COMMIT_DATE" +%Y%m%d%H%M`-minimal.tar.gz
 	OPKG_STATUS="`ls -1d build_dir/target-arm_*/root-mvebu*/usr/lib/opkg/status`"
 	ln -s omnia-medkit-`date -d "$COMMIT_DATE" +%Y%m%d%H%M`-minimal.tar.gz bin-nand/mvebu-musl/medkit/omnia-medkit-latest-minimal.tar.gz
 else
+	echo "Debug-32">>./log_build_script.txt
+
 	OPKG_STATUS="`ls -1d bin-nand/*/root/usr/lib/opkg/status`"
 fi
+echo "Debug-33">>./log_build_script.txt
 
 echo Install $(sed -n 's|Package: \(.*\)|"\1"|p' $OPKG_STATUS | egrep -v '"updater(|-deps|-consolidator)"') " { critical = true }" >> base.lua
 [ \! -f "lists/base_add" ]               || echo Install $(cat "lists/base_add.$TARGET_BOARD" | sed 's|^\([^#]\+\)$|"\1"|') " { critical = true }" >> base.lua
@@ -253,6 +294,8 @@ for i in lists/*.list; do
 		staging_dir/host/bin/usign -S -m $PUB_BIN_DIR/lists/"$LUA" -s "$HOME"/mime.key
 	fi
 done
+echo "Debug-34">>./log_build_script.txt
+
 for i in lists/*.lua; do
 	if [ -r "$i" ]; then
 		cp $i $PUB_BIN_DIR/lists
@@ -261,7 +304,11 @@ for i in lists/*.lua; do
 		fi
 	fi
 done
+echo "Debug-35">>./log_build_script.txt
+
 if [ "$TARGET_BOARD" = "omnia" ]; then
+	echo "Debug-36">>./log_build_script.txt
+
 	rm -f $PUB_BIN_DIR/*.ext4 $PUB_BIN_DIR/*sums
 	for i in $PUB_BIN_DIR/medkit/*.tar.gz; do
 		if [ -f "$HOME"/mime.key ]; then
@@ -273,8 +320,11 @@ if [ "$TARGET_BOARD" = "omnia" ]; then
 		popd
 	done
 fi
+echo "Debug-37">>./log_build_script.txt
 
 if [ "$TARGET_BOARD" = turris ]; then
+	echo "Debug-38">>./log_build_script.txt
+
 	# Build NOR FW
 	cp configs/config-turris-nor .config
 	[ -n "$USE_CCACHE" ] && echo "CONFIG_CCACHE=y" >> .config
@@ -287,6 +337,8 @@ if [ "$TARGET_BOARD" = turris ]; then
 	mv ./bin ./bin-nor
 
 elif [ "$TARGET_BOARD" = omnia ]; then
+	echo "Debug-39">>./log_build_script.txt
+
 	cp configs/config-omnia-rescue .config
 	[ -n "$USE_CCACHE" ] && echo "CONFIG_CCACHE=y" >> .config
     # Ugly hack, make python compile first to avoid possible race
