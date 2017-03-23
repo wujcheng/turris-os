@@ -337,9 +337,6 @@ if [ "$TARGET_BOARD" = turris ]; then
 	make defconfig
 	make clean
 
-	make package/gettext-full/host/clean
-	make package/gettext-full/host/compile V=s
-
 	make "$@"
 	[ \! -d ./logs ] || mv ./logs ./logs-nor
 	[ -d ./bin/mpc85xx/packages ] && rm -rf ./bin/mpc85xx/packages
@@ -355,8 +352,6 @@ elif [ "$TARGET_BOARD" = omnia ]; then
     ./scripts/feeds uninstall python
 	make defconfig CONFDEFAULT=n
 	make clean
-	make package/gettext-full/host/clean
-	make package/gettext-full/host/compile V=s
 	make "$@"
 	echo -e "CONFIG_TARGET_ROOTFS_INITRAMFS=y\nCONFIG_TARGET_INITRAMFS_COMPRESSION_XZ=y" >> .config
 	sed -i 's/^TARGET_ROOTFS_INCLUDE_KERNEL=.*/# TARGET_ROOTFS_INCLUDE_KERNEL is not set/' .config
