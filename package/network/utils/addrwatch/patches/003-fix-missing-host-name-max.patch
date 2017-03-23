@@ -1,0 +1,11 @@
+--- a/src/addrwatch.c
++++ b/src/addrwatch.c
+@@ -21,6 +21,8 @@
+ #include "output_sqlite.h"
+ #include "output_mysql.h"
+
++#define HOST_NAME_MAX 64
++
+ const char *argp_program_version = PACKAGE_STRING;
+ const char *argp_program_bug_address = PACKAGE_BUGREPORT;
+ static char args_doc[] = "[INTERFACE1 INTERFACE2 ...]";
