@@ -248,6 +248,10 @@ if [ -n "$BUILD_ALL" ] && [ "$TARGET_BOARD" = omnia ]; then
 	echo "Debug-28">>./log_build_script.txt
 
 	make dirclean
+
+	make package/gettext-full/host/clean
+	make package/gettext-full/host/compile V=s
+
 	cat configs/common configs/$TARGET_BOARD | sed -e "s|@BOARD@|$TARGET_BOARD|" -e "s|@BRANCH@|$PKG_BRANCH|" > .config
 	echo CONFIG_ALL_KMODS=y >> .config
 	cat "lists/base.list" "lists/base.${TARGET_BOARD}" | sed 's|#.*||' 2> /dev/null | while read PKG; do
@@ -332,6 +336,10 @@ if [ "$TARGET_BOARD" = turris ]; then
 	[ -n "$USE_CCACHE" ] && echo "CONFIG_CCACHE=y" >> .config
 	make defconfig
 	make clean
+
+	make package/gettext-full/host/clean
+	make package/gettext-full/host/compile V=s
+
 	make "$@"
 	[ \! -d ./logs ] || mv ./logs ./logs-nor
 	[ -d ./bin/mpc85xx/packages ] && rm -rf ./bin/mpc85xx/packages
@@ -347,6 +355,8 @@ elif [ "$TARGET_BOARD" = omnia ]; then
     ./scripts/feeds uninstall python
 	make defconfig CONFDEFAULT=n
 	make clean
+	make package/gettext-full/host/clean
+	make package/gettext-full/host/compile V=s
 	make "$@"
 	echo -e "CONFIG_TARGET_ROOTFS_INITRAMFS=y\nCONFIG_TARGET_INITRAMFS_COMPRESSION_XZ=y" >> .config
 	sed -i 's/^TARGET_ROOTFS_INCLUDE_KERNEL=.*/# TARGET_ROOTFS_INCLUDE_KERNEL is not set/' .config
