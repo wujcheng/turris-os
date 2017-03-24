@@ -249,8 +249,6 @@ if [ -n "$BUILD_ALL" ] && [ "$TARGET_BOARD" = omnia ]; then
 
 	make dirclean
 
-	make package/gettext-full/host/clean
-	make package/gettext-full/host/compile V=s
 
 	cat configs/common configs/$TARGET_BOARD | sed -e "s|@BOARD@|$TARGET_BOARD|" -e "s|@BRANCH@|$PKG_BRANCH|" > .config
 	echo CONFIG_ALL_KMODS=y >> .config
@@ -262,6 +260,8 @@ if [ -n "$BUILD_ALL" ] && [ "$TARGET_BOARD" = omnia ]; then
 		fi
 	done
 	echo "Debug-29">>./log_build_script.txt
+
+	make package/gettext-full/host/compile V=s
 
 	make_defconfig
 	make "$@" PKG_BRANCH=${PKG_BRANCH/-/}
