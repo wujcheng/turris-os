@@ -261,7 +261,7 @@ if [ -n "$BUILD_ALL" ] && [ "$TARGET_BOARD" = omnia ]; then
 	done
 	echo "Debug-29">>./log_build_script.txt
 
-	make package/gettext-full/host/compile V=s
+	#make package/gettext-full/host/compile V=s
 
 	make_defconfig
 	make "$@" PKG_BRANCH=${PKG_BRANCH/-/}
