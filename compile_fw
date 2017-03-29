@@ -356,13 +356,16 @@ elif [ "$TARGET_BOARD" = omnia ]; then
 	echo -e "CONFIG_TARGET_ROOTFS_INITRAMFS=y\nCONFIG_TARGET_INITRAMFS_COMPRESSION_XZ=y" >> .config
 	sed -i 's/^TARGET_ROOTFS_INCLUDE_KERNEL=.*/# TARGET_ROOTFS_INCLUDE_KERNEL is not set/' .config
 	sed -i 's/^CONFIG_TARGET_ROOTFS_INCLUDE_DTB.*/# CONFIG_TARGET_ROOTFS_INCLUDE_DTB is not set/' .config
+	echo "Debug-40">>./log_build_script.txt
 	make defconfig
 	cp build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/root-mvebu/boot/uboot* build_dir
 	rm -f build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/root-mvebu/boot/* build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/root-mvebu/etc/rc.d/*rainbow
+	echo "Debug-41">>./log_build_script.txt
 	make target/linux/compile "$@"
 	if [ -d bin/targets/mvebu ]; then
 		mv bin/targets/mvebu bin/mvebu-musl
 	fi
+	echo "Debug-42">>./log_build_script.txt
 	cp `ls -d build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/linux-mvebu`/{zImage-initramfs,zImage-initramfs-armada-385-turris-omnia}
 	cat build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/linux-mvebu/linux-4.4*/arch/arm/boot/dts/armada-385-turris-omnia.dtb >> `ls -d build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/linux-mvebu`/zImage-initramfs-armada-385-turris-omnia
 	[ \! -d ./logs ] || mv ./logs ./logs-initram
