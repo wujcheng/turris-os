@@ -83,3 +83,16 @@ CONFIG_PACKAGE_foris-openvpn-plugin=y
 CONFIG_PACKAGE_dhparam=y
 CONFIG_PACKAGE_libmbedtls=y
 CONFIG_PACKAGE_openvpn-openssl=y
+
+# freeradius
+CONFIG_PACKAGE_luci-app-radius=y
+CONFIG_PACKAGE_freeradius2=y
+CONFIG_FREERADIUS_OPENSSL=y
+CONFIG_PACKAGE_freeradius2-common=y
+CONFIG_PACKAGE_freeradius2-democerts=y
+CONFIG_PACKAGE_freeradius2-mod-eap=y
+CONFIG_PACKAGE_freeradius2-mod-eap-mschapv2=y
+CONFIG_PACKAGE_freeradius2-mod-eap-peap=y
+CONFIG_PACKAGE_freeradius2-mod-eap-tls=y
+CONFIG_PACKAGE_freeradius2-mod-files=y
+CONFIG_PACKAGE_freeradius2-mod-mschap=y
