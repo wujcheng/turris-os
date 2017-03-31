@@ -98,4 +98,4 @@ CONFIG_PACKAGE_freeradius2-mod-files=y
 CONFIG_PACKAGE_freeradius2-mod-mschap=y
 
 # mlocate
-CONFIG_PACKAGE_mlocate=y
+#CONFIG_PACKAGE_mlocate=y
