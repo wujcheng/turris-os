@@ -9,7 +9,6 @@ libwebsockets
 openocd
 ttyd
 nail
-ustream-ssl
 f2fs-tools failed to build.
 gptfdisk
 loudmouth
