@@ -379,6 +379,7 @@ elif [ "$TARGET_BOARD" = omnia ]; then
 		mv bin/targets/mvebu bin/mvebu-musl
 	fi
 	echo "Debug-48">>./log_build_script.txt
+	mkdir -p bin/mvebu-musl/
 	cp `ls -d build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/linux-mvebu`/{zImage-initramfs,zImage-initramfs-armada-385-turris-omnia}
 	cat build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/linux-mvebu/linux-4.4*/arch/arm/boot/dts/armada-385-turris-omnia.dtb >> `ls -d build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/linux-mvebu`/zImage-initramfs-armada-385-turris-omnia
 	[ \! -d ./logs ] || mv ./logs ./logs-initram
