@@ -99,3 +99,8 @@ CONFIG_PACKAGE_freeradius2-mod-mschap=y
 
 # mlocate
 #CONFIG_PACKAGE_mlocate=y
+
+# usbip
+CONFIG_PACKAGE_kmod-usbip=y
+CONFIG_PACKAGE_kmod-usbip-client=y
+CONFIG_PACKAGE_kmod-usbip-server=y
