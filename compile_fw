@@ -261,9 +261,18 @@ if [ -n "$BUILD_ALL" ] && [ "$TARGET_BOARD" = omnia ]; then
 	done
 	echo "Debug-29">>./log_build_script.txt
 
-	#make package/gettext-full/host/compile V=s
+	make package/gettext/compile V=s
+
+	echo "Debug-29.a">>./log_build_script.txt
+	make package/gettext/host/compile V=s
+	echo "Debug-29.b">>./log_build_script.txt
+	make package/gettext-full/compile V=s
+	echo "Debug-29.c">>./log_build_script.txt
+	make package/gettext-full/host/compile V=s
+	echo "Debug-29.d">>./log_build_script.txt
 
 	make_defconfig
+	echo "Debug-29.e">>./log_build_script.txt
 	make "$@" PKG_BRANCH=${PKG_BRANCH/-/}
 	if [ -d bin/targets/mvebu ]; then
 		echo "Debug-30">>./log_build_script.txt
