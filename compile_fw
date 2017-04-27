@@ -358,7 +358,7 @@ elif [ "$TARGET_BOARD" = omnia ]; then
 	[ -n "$USE_CCACHE" ] && echo "CONFIG_CCACHE=y" >> .config
     # Ugly hack, make python compile first to avoid possible race
     #./scripts/feeds uninstall python
-	#make defconfig CONFDEFAULT=n
+	make defconfig CONFDEFAULT=n
 	make clean
 
 	#echo "Debug-40">>./log_build_script.txt
@@ -371,7 +371,7 @@ elif [ "$TARGET_BOARD" = omnia ]; then
 	#make package/python/compile V=s
 	#echo "Debug-44">>./log_build_script.txt
 
-	#make "$@"
+	make "$@"
 	echo -e "CONFIG_TARGET_ROOTFS_INITRAMFS=y\nCONFIG_TARGET_INITRAMFS_COMPRESSION_XZ=y" >> .config
 	sed -i 's/^TARGET_ROOTFS_INCLUDE_KERNEL=.*/# TARGET_ROOTFS_INCLUDE_KERNEL is not set/' .config
 	sed -i 's/^CONFIG_TARGET_ROOTFS_INCLUDE_DTB.*/# CONFIG_TARGET_ROOTFS_INCLUDE_DTB is not set/' .config
