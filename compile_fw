@@ -191,7 +191,8 @@ COMMIT_DATE="`git log --format=format:%cD -1`"
 
 if [ -d bin/targets/mvebu ]; then
 	echo "Debug-23">>./log_build_script.txt
-	mv bin/targets/mvebu bin/mvebu-musl
+	#mv bin/targets/mvebu bin/mvebu-musl
+	cp -r bin/targets/mvebu bin/mvebu-musl
 fi
 
 if [ "$TARGET_BOARD" = turris ]; then
@@ -276,7 +277,8 @@ if [ -n "$BUILD_ALL" ] && [ "$TARGET_BOARD" = omnia ]; then
 	if [ -d bin/targets/mvebu ]; then
 		echo "Debug-30">>./log_build_script.txt
 
-		mv bin/targets/mvebu bin/mvebu-musl
+		#mv bin/targets/mvebu bin/mvebu-musl
+		cp -r bin/targets/mvebu bin/mvebu-musl
 	fi
 	echo "Debug-31">>./log_build_script.txt
 
@@ -384,7 +386,8 @@ elif [ "$TARGET_BOARD" = omnia ]; then
 	echo "Debug-47">>./log_build_script.txt
 	make target/linux/compile "$@"
 	if [ -d bin/targets/mvebu ]; then
-		mv bin/targets/mvebu bin/mvebu-musl
+		#mv bin/targets/mvebu bin/mvebu-musl
+		cp -r bin/targets/mvebu bin/mvebu-musl
 	fi
 	echo "Debug-48">>./log_build_script.txt
 	mkdir -p bin/mvebu-musl/

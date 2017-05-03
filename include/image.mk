@@ -270,7 +270,9 @@ define Image/Checksum
 		$(FIND) -maxdepth 1 -type f \! -name 'md5sums'  -printf "%P\n" > sumslist.txt ; \
 		sort sumslist.txt>sumlist_sorted.txt ; \
 		echo "$1">aaaaaaaaaa.txt ; \
+		pwd >> aaaaaaaaaa.txt ; \
 		echo "$2">bbbbbbbbbb.txt ; \
+		pwd >> bbbbbbbbbb.txt ; \
 		cat sumlist_sorted.txt | xargs $1 > $2 ; \
 	)
 endef
