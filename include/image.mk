@@ -268,12 +268,14 @@ define Image/Checksum
 
 	( cd ${BIN_DIR} ; \
 		$(FIND) -maxdepth 1 -type f \! -name 'md5sums'  -printf "%P\n" > sumslist.txt ; \
+		set +e ; \
 		sort sumslist.txt>sumlist_sorted.txt ; \
 		echo "$1">aaaaaaaaaa.txt ; \
 		pwd >> aaaaaaaaaa.txt ; \
 		echo "$2">bbbbbbbbbb.txt ; \
 		pwd >> bbbbbbbbbb.txt ; \
 		cat sumlist_sorted.txt | xargs $1 > $2 ; \
+		set -e ; \
 	)
 endef
 
