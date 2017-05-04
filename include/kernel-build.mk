@@ -83,6 +83,7 @@ define BuildKernel
 	do
 	$(TARGET_CROSS)nm $(line) | awk '$$$$1 == "U" { print $$$$2 } ' > $(KERNEL_BUILD_DIR)/nm.txt
 	done < $(KERNEL_BUILD_DIR)/ko_find.txt
+	echo $(KERNEL_BUILD_DIR)/mod_symtab.txt>cccccccccccc.txt
 	sort -u $(KERNEL_BUILD_DIR)/nm.txt > $(KERNEL_BUILD_DIR)/mod_symtab.txt
 	$(TARGET_CROSS)nm -n $(LINUX_DIR)/vmlinux.o | grep ' [rR] __ksymtab' | sed -e 's,........ [rR] __ksymtab_,,' > $(KERNEL_BUILD_DIR)/kernel_symtab.txt
 	grep -Ff $(KERNEL_BUILD_DIR)/mod_symtab.txt $(KERNEL_BUILD_DIR)/kernel_symtab.txt > $(KERNEL_BUILD_DIR)/sym_include.txt
