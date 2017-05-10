@@ -385,6 +385,8 @@ elif [ "$TARGET_BOARD" = omnia ]; then
 	rm -f build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/root-mvebu/boot/* build_dir/target-arm_cortex-a9+vfpv3_musl-*_eabi/root-mvebu/etc/rc.d/*rainbow
 	echo "Debug-47">>./log_build_script.txt
 	make target/linux/compile "$@"
+	echo "Debug-47.a">>./log_build_script.txt
+	make target/linux/install
 	if [ -d bin/targets/mvebu ]; then
 		#mv bin/targets/mvebu bin/mvebu-musl
 		cp -r bin/targets/mvebu bin/mvebu-musl
