@@ -265,7 +265,8 @@ endef
 
 define Image/Checksum
 	( cd ${BIN_DIR} ; \
-		$(FIND) -maxdepth 1 -type f \! -name 'md5sums'  -printf "%P\n" | sort | xargs $1 > $2 \
+		echo ${BIN_DIR}>eeeeeeeeeeeeeee.txt ; \
+		echo " xargs $1 > $2">fffffffffffffff.txt \
 	)
 endef
 
