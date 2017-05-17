@@ -24,12 +24,12 @@ my %file_owners;
 for my $package (@found_packages) {
 	# An external shell script analyses each package
 	open my $pkg_content, '-|', $FindBin::Bin . "/pkg-content.sh", $package or die "Can't get content of package $package: $!\n";
-	# The first line of the output is the package name
-	my $pkg_name = <$pkg_content>;
-	chomp $pkg_name;
+	# The first line of the output is the package name and second one version
+	my %pkg = (name => <$pkg_content>, version => <$pkg_content>);
+	chomp %pkg;
 	for my $file (<$pkg_content>) {
 		chomp $file;
-		push @{$file_owners{$file}}, $pkg_name;
+		push @{$file_owners{$file}}, $pkg;
 	}
 	close $pkg_content or die "Error reading package content: $!/$?\n";
 }
@@ -47,5 +47,5 @@ for my $owners (values %file_owners) { # We don't care on *which* file the colli
 }
 
 while (my ($blocked, $blockers) = each %collisions) {
-	print "Package '$blocked' { deps = {" . (join ', ', map "Not('$_')", keys %$blockers) . "} }\n";
+	print "Package '$blocked{'name'}' { match-version = '=$blocked{'version'}', deps = {" . (join ', ', map "Not('$_{'name'} (=$_{'version'})')", keys %$blockers) . "} }\n";
 }
