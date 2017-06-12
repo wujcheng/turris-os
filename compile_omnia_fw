@@ -1,2 +1,9 @@
 #!/bin/sh -x
+
+if [ "$BUILD_IMAGE" == "rescue" ]; then
+echo "Compile rescue image"
+`dirname "$0"`/compile_fw_rescue omnia "$@"
+else
+echo "Compile normal image"
 `dirname "$0"`/compile_fw omnia "$@"
+fi
