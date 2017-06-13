@@ -1,6 +1,6 @@
 #!/bin/sh -x
 
-if [ "$BUILD_IMAGE" == "rescue" ]; then
+if [ "$BUILD_IMAGE" = "rescue" ]; then
 echo "Compile rescue image"
 `dirname "$0"`/compile_fw_rescue "$@"
 else
