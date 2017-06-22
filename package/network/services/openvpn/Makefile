@@ -9,12 +9,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=openvpn
 
-PKG_VERSION:=2.4.0
+PKG_VERSION:=2.4.3
 PKG_RELEASE:=1
 
 PKG_SOURCE_URL:=http://swupdate.openvpn.net/community/releases
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_MD5SUM:=e49431542f065dd60a0181233927669e
+PKG_MD5SUM:=fc49c83ebf85236c735b403fc8293697
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
 
@@ -132,5 +132,3 @@ define Package/openvpn-$(BUILD_VARIANT)/install
 endef
 
 $(eval $(call BuildPackage,openvpn-openssl))
-$(eval $(call BuildPackage,openvpn-mbedtls))
-$(eval $(call BuildPackage,openvpn-nossl))
