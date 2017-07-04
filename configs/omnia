@@ -113,3 +113,5 @@ CONFIG_PACKAGE_python-future=y
 
 # tor
 CONFIG_PACKAGE_tor=y
+
+CONFIG_PACKAGE_oath-toolkit=y
