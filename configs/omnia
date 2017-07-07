@@ -115,3 +115,6 @@ CONFIG_PACKAGE_python-future=y
 CONFIG_PACKAGE_tor=y
 
 CONFIG_PACKAGE_oath-toolkit=y
+CONFIG_PACKAGE_python3-paho-mqtt=y
+CONFIG_PACKAGE_python-paho-mqtt=y
+
