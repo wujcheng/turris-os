@@ -20,6 +20,7 @@ PKG_MAINTAINER:=Jan Pavlinec <jan.pavlinec@nic.cz>
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)-x86_64-unknown-linux-gnu
 HOST_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)-x86_64-unknown-linux-gnu
 
+HOST_BUILD_DEPENDS:=rustc/host
 PKG_BUILD_DEPENDS:=rustc/host
 
 PKG_INSTALL:=1
