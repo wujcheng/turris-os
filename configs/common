@@ -162,7 +162,7 @@ CONFIG_PACKAGE_openwisp-config-nossl=n
 CONFIG_PACKAGE_openwisp-config-polarssl=n
 
 #rust
-CONFIG_PACKAGE_rustc=y
-CONFIG_PACKAGE_cargo=y
-CONFIG_PACKAGE_rust-demo-rider=y
+#CONFIG_PACKAGE_rustc=y
+#CONFIG_PACKAGE_cargo=y
+#CONFIG_PACKAGE_rust-demo-rider=y
 
