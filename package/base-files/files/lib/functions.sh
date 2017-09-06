@@ -156,7 +156,7 @@ config_list_foreach() {
 insert_modules() {
 	for m in $*; do
 		if [ -f /etc/modules.d/$m ]; then
-			sed 's/^[^#]/insmod &/' /etc/modules.d/* | ash 2>&- || :
+			sed 's/^[^#]/insmod &/' /etc/modules.d/$m | ash 2>&- || :
 		else
 			modprobe $m
 		fi
@@ -164,77 +164,102 @@ insert_modules() {
 }
 
 default_prerm() {
+	local root="${IPKG_INSTROOT}"
 	local name
+
 	name=$(basename ${1%.*})
-	[ -f /usr/lib/opkg/info/${name}.prerm-pkg ] && . /usr/lib/opkg/info/${name}.prerm-pkg
-	for i in `cat /usr/lib/opkg/info/${name}.list | grep "^/etc/init.d/"`; do
-		$i disable
-		$i stop
+	[ -f "$root/usr/lib/opkg/info/${name}.prerm-pkg" ] && . "$root/usr/lib/opkg/info/${name}.prerm-pkg"
+
+	local shell="$(which bash)"
+	for i in `cat "$root/usr/lib/opkg/info/${name}.list" | grep "^/etc/init.d/"`; do
+		if [ -n "$root" ]; then
+			${shell:-/bin/sh} "$root/etc/rc.common" "$root$i" disable
+		else
+			if [ "$PKG_UPGRADE" != "1" ]; then
+				"$i" disable
+			fi
+			"$i" stop || /bin/true
+		fi
 	done
 }
 
-default_postinst() {
-	local pkgname rusers
-	pkgname=$(basename ${1%.*})
-	rusers=$(grep "Require-User:" ${IPKG_INSTROOT}/usr/lib/opkg/info/${pkgname}.control)
-	[ -n "$rusers" ] && {
-		local user group uid gid
-		for a in $(echo $rusers | sed "s/Require-User://g"); do
-			user=""
-			group=""
-			for b in $(echo $a | sed "s/:/ /g"); do
-				local ugname ugid
+add_group_and_user() {
+	local pkgname="$1"
+	local rusers="$(sed -ne 's/^Require-User: *//p' $root/usr/lib/opkg/info/${pkgname}.control 2>/dev/null)"
 
-				ugname=$(echo $b | cut -d= -f1)
-				ugid=$(echo $b | cut -d= -f2)
+	if [ -n "$rusers" ]; then
+		local tuple oIFS="$IFS"
+		for tuple in $rusers; do
+			local uid gid uname gname
 
-				[ -z "$user" ] && {
-					user=$ugname
-					uid=$ugid
-					continue
-				}
+			IFS=":"
+			set -- $tuple; uname="$1"; gname="$2"
+			IFS="="
+			set -- $uname; uname="$1"; uid="$2"
+			set -- $gname; gname="$1"; gid="$2"
+			IFS="$oIFS"
 
-				gid=$ugid
-				[ -n "$gid" ] && {
-					group_exists $ugname || group_add $ugname $gid
-				}
-
-				[ -z "$gid" ] && {
-					group_add_next $ugname
-					gid=$?
-				}
-
-				[ -z "$group" ] && {
-					user_exists $user || user_add $user "$uid" $gid
-					group=$ugname
-					continue
-				}
-
-				group_add_user $ugname $user
-			done
-		done
-	}
-
-	[ -f ${IPKG_INSTROOT}/usr/lib/opkg/info/${pkgname}.postinst-pkg ] && ( . ${IPKG_INSTROOT}/usr/lib/opkg/info/${pkgname}.postinst-pkg )
-	[ -n "${IPKG_INSTROOT}" ] || rm -f /tmp/luci-indexcache 2>/dev/null
-
-	for i in `cat ${IPKG_INSTROOT}/usr/lib/opkg/info/${pkgname}.list | grep "^/etc/init.d/"`; do
-		if grep "^`basename $i`$" "${IPKG_INSTROOT}"/etc/services_wanted >/dev/null || \
-		   grep "^/etc/init.d/`basename $i`$" "${IPKG_INSTROOT}"/usr/lib/opkg/info/base-files.list >/dev/null; then
-			if grep '#!/bin/sh /etc/rc.common' "${IPKG_INSTROOT}"/$i >/dev/null; then
-				"${IPKG_INSTROOT}"/etc/rc.common "${IPKG_INSTROOT}"/$i enable
-			elif [ -z "${IPKG_INSTROOT}" ]; then
-				$i enable
-			else
-				echo "Warning: init script $i isn't using rc.common and can't be activated"
+			if [ -n "$gname" ] && [ -n "$gid" ]; then
+				group_exists "$gname" || group_add "$gname" "$gid"
+			elif [ -n "$gname" ]; then
+				group_add_next "$gname"; gid=$?
 			fi
-		fi
 
-		if [ -z "${IPKG_INSTROOT}" ] && $i enabled && [ "$pkgname" \!= updater ]; then
-			$i restart
+			if [ -n "$uname" ]; then
+				user_exists "$uname" || user_add "$uname" "$uid" "$gid"
+			fi
+
+			if [ -n "$uname" ] && [ -n "$gname" ]; then
+				group_add_user "$gname" "$uname"
+			fi
+
+			unset uid gid uname gname
+		done
+	fi
+}
+
+default_postinst() {
+	local root="${IPKG_INSTROOT}"
+	local pkgname="$(basename ${1%.*})"
+	local ret=0
+
+	add_group_and_user "${pkgname}"
+
+	if [ -f "$root/usr/lib/opkg/info/${pkgname}.postinst-pkg" ]; then
+		( . "$root/usr/lib/opkg/info/${pkgname}.postinst-pkg" )
+		ret=$?
+	fi
+
+	if [ -d "$root/rootfs-overlay" ]; then
+		cp -R $root/rootfs-overlay/. $root/
+		rm -fR $root/rootfs-overlay/
+	fi
+
+	if [ -z "$root" ] && grep -q -s "^/etc/uci-defaults/" "/usr/lib/opkg/info/${pkgname}.list"; then
+		. /lib/functions/system.sh
+		[ -d /tmp/.uci ] || mkdir -p /tmp/.uci
+		for i in $(sed -ne 's!^/etc/uci-defaults/!!p' "/usr/lib/opkg/info/${pkgname}.list"); do (
+			cd /etc/uci-defaults
+			[ -f "$i" ] && . "$i" && rm -f "$i"
+		) done
+		uci commit
+	fi
+
+	[ -n "$root" ] || rm -f /tmp/luci-indexcache 2>/dev/null
+
+	local shell="$(which bash)"
+	for i in $(grep -s "^/etc/init.d/" "$root/usr/lib/opkg/info/${pkgname}.list"); do
+		if [ -n "$root" ]; then
+			${shell:-/bin/sh} "$root/etc/rc.common" "$root$i" enable
+		else
+			if [ "$PKG_UPGRADE" != "1" ]; then
+				"$i" enable
+			fi
+			"$i" start
 		fi
 	done
-	return 0
+
+	return $ret
 }
 
 include() {

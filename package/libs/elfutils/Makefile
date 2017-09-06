@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2010-2014 OpenWrt.org
+# Copyright (C) 2016 Luiz Angelo Daros de Luca <luizluca@gmail.com>
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -7,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=elfutils
-PKG_VERSION:=0.161
+PKG_VERSION:=0.168
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_URL:=http://fedorahosted.org/releases/e/l/$(PKG_NAME)/$(PKG_VERSION)
-PKG_MD5SUM:=e1b9847c9a6a1ad340de8d47a863ec52
+PKG_SOURCE_URL:=https://sourceware.org/$(PKG_NAME)/ftp/$(PKG_VERSION)
+PKG_HASH:=b88d07893ba1373c7dd69a7855974706d05377766568a7d9002706d5de72c276
 PKG_MAINTAINER:=Luiz Angelo Daros de Luca <luizluca@gmail.com>
 PKG_LICENSE:=GPL-3.0+
 PKG_LICENSE_FILES:=COPYING COPYING-GPLV2 COPYING-LGPLV3
@@ -28,7 +29,6 @@ include $(INCLUDE_DIR)/nls.mk
 define Package/elfutils/Default
   SECTION:=libs
   CATEGORY:=Libraries
-  DEPENDS:=$(INTL_DEPENDS)
   TITLE:=ELF manipulation libraries
   URL:=https://fedorahosted.org/elfutils/
 endef
@@ -36,17 +36,18 @@ endef
 define Package/libasm
   $(call Package/elfutils/Default)
   TITLE+= (libasm)
-  DEPENDS:=libelf1
+  DEPENDS:=libelf1 +libdw
 endef
 
 define Package/libdw
   $(call Package/elfutils/Default)
-  DEPENDS:=libelf1 +zlib +libbz2
+  DEPENDS:=libelf1 +libbz2
   TITLE+= (libdw)
 endef
 
 define Package/libelf1
   $(call Package/elfutils/Default)
+  DEPENDS:=$(INTL_DEPENDS) +zlib
   TITLE+= (libelf)
 endef
 
@@ -65,8 +66,9 @@ CONFIGURE_VARS += \
 endif
 
 CONFIGURE_ARGS += \
-	--disable-werror \
 	--without-lzma
+
+TARGET_CFLAGS += -D_GNU_SOURCE
 
 define Build/InstallDev
 	$(INSTALL_DIR) $(1)/usr/include

@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2006-2010 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
@@ -15,16 +15,15 @@ SCAN_DEPS=modules/*.mk $(TOPDIR)/target/linux/*/modules.mk $(TOPDIR)/include/net
 
 PKG_LICENSE:=GPLv2
 PKG_LICENSE_FILES:=
-PKG_VERSION:=0
 
 export SHELL:=/bin/sh
 .ONESHELL:
+.SHELLFLAGS = -ec
 
 include $(INCLUDE_DIR)/package.mk
 
-STAMP_BUILT:=$(STAMP_BUILT)_$(firstword $(shell $(SCRIPT_DIR)/kconfig.pl $(LINUX_DIR)/.config | md5sum))
-
 ifeq ($(DUMP),)
+  STAMP_BUILT:=$(STAMP_BUILT)_$(shell $(SCRIPT_DIR)/kconfig.pl $(LINUX_DIR)/.config | mkhash md5)
   -include $(LINUX_DIR)/.config
 endif
 
@@ -46,9 +45,10 @@ define Package/kernel
   SECTION:=sys
   CATEGORY:=Kernel
   DEFAULT:=y
-  TITLE:=Kernel package
+  TITLE:=Virtual kernel package
   VERSION:=$(LINUX_VERSION)-$(LINUX_RELEASE)-$(LINUX_VERMAGIC)
   URL:=http://www.kernel.org/
+  PKG_FLAGS:=nonshared
   DEPENDS:=+create_notification +TARGET_mpc85xx_p2020_nand_TURRISNAND:uboot-turris +TARGET_mpc85xx_p2020_nand_TURRISNAND:mtd-utils-flash-erase
 endef
 
@@ -67,6 +67,8 @@ define Package/kernel/install
 		$(1)/boot/dtb
 endef
 endif
+
+# TODO move this to separate package
 
 ifdef CONFIG_TARGET_mpc85xx_p2020_nand
 define Package/kernel/install

@@ -1,21 +1,19 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=ubus
-PKG_VERSION:=2015-05-25
-PKG_RELEASE=$(PKG_SOURCE_VERSION)
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=http://git.openwrt.org/project/ubus.git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_VERSION:=f361bfa5fcb2daadf3b160583ce665024f8d108e
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
-PKG_MIRROR_MD5SUM:=
+PKG_SOURCE_URL=$(LEDE_GIT)/project/ubus.git
+PKG_SOURCE_DATE:=2017-02-18
+PKG_SOURCE_VERSION:=34c6e818e431cc53478a0f7c7c1eca07d194d692
+PKG_MIRROR_HASH:=fc4f1121faa4f5b8fa52ee25460b98b2e60e7d245aefa70e7f76c56ce5628fd5
 CMAKE_INSTALL:=1
 
 PKG_LICENSE:=LGPL-2.1
 PKG_LICENSE_FILES:=
 
-PKG_MAINTAINER:=Felix Fietkau <nbd@openwrt.org>
+PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
@@ -31,7 +29,7 @@ define Package/ubusd
   SECTION:=base
   CATEGORY:=Base system
   TITLE:=OpenWrt RPC daemon
-  DEPENDS:=+libubox
+  DEPENDS:=+libubox +libblobmsg-json
 endef
 
 define Package/libubus

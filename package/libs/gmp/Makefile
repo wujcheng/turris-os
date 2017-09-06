@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006-2014 OpenWrt.org
+# Copyright (C) 2006-2016 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -9,12 +9,11 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=gmp
 PKG_VERSION:=6.1.2
-PKG_REVISION:=
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)$(PKG_REVISION).tar.xz
-PKG_SOURCE_URL:=http://gmplib.org/download/gmp/
-PKG_MD5SUM:=87b565e89a9a684fe4ebeeddb8399dce2599f9c9049854ca8c0dfbdea0e21912
+PKG_SOURCE_URL:=@GNU/gmp/
+PKG_HASH:=87b565e89a9a684fe4ebeeddb8399dce2599f9c9049854ca8c0dfbdea0e21912
 
 PKG_BUILD_PARALLEL:=1
 PKG_INSTALL:=1

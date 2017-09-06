@@ -37,8 +37,9 @@ wndr3700_board_detect() {
 		machine="NETGEAR WNDR3700"
 		;;
 	"33373031")
-		# Use awk to remove everything after the first zero byte
-		model="$(ar71xx_get_mtd_offset_size_format art 41 32 %c | awk 'BEGIN{FS="[[:cntrl:]]"} {print $1; exit}')"
+		model="$(ar71xx_get_mtd_offset_size_format art 41 32 %c)"
+		# Use awk to remove everything unprintable
+		model_stripped="$(ar71xx_get_mtd_offset_size_format art 41 32 %c | LC_CTYPE=C awk -v 'FS=[^[:print:]]' '{print $1; exit}')"
 		case $model in
 		$'\xff'*)
 			if [ "${model:24:1}" = 'N' ]; then
@@ -48,19 +49,53 @@ wndr3700_board_detect() {
 			fi
 			;;
 		'29763654+16+64'*)
-			machine="NETGEAR ${model:14}"
+			machine="NETGEAR ${model_stripped:14}"
 			;;
 		'29763654+16+128'*)
-			machine="NETGEAR ${model:15}"
+			machine="NETGEAR ${model_stripped:15}"
 			;;
 		*)
 			# Unknown ID
-			machine="NETGEAR $model"
+			machine="NETGEAR ${model_stripped}"
 		esac
 	esac
 
 	AR71XX_BOARD_NAME="$name"
 	AR71XX_MODEL="$machine"
+}
+
+ubnt_get_mtd_part_magic() {
+	ar71xx_get_mtd_offset_size_format EEPROM 4118 2 %02x
+}
+
+ubnt_xm_board_detect() {
+	local model
+	local magic
+
+	magic="$(ubnt_get_mtd_part_magic)"
+	case ${magic:0:3} in
+		"e00"|\
+		"e01"|\
+		"e80")
+			model="Ubiquiti NanoStation M"
+			;;
+		"e0a")
+			model="Ubiquiti NanoStation loco M"
+			;;
+		"e1b"|\
+		"e1d")
+			model="Ubiquiti Rocket M"
+			;;
+		"e20"|\
+		"e2d")
+			model="Ubiquiti Bullet M"
+			;;
+		"e30")
+			model="Ubiquiti PicoStation M"
+			;;
+	esac
+
+	[ -z "$model" ] || AR71XX_MODEL="${model}${magic:3:1}"
 }
 
 cybertan_get_hw_magic() {
@@ -70,6 +105,15 @@ cybertan_get_hw_magic() {
 	[ -z "$part" ] && return 1
 
 	dd bs=8 count=1 skip=0 if=$part 2>/dev/null | hexdump -v -n 8 -e '1/1 "%02x"'
+}
+
+dir505_board_detect() {
+	local dev=$(find_mtd_part 'mac')
+	[ -z "$dev" ] && return
+
+	# The revision is stored at the beginning of the "mac" partition
+	local rev="$(LC_CTYPE=C awk -v 'FS=[^[:print:]]' '{print $1; exit}' $dev)"
+	AR71XX_MODEL="D-Link DIR-505 rev. $rev"
 }
 
 tplink_get_hwid() {
@@ -98,7 +142,7 @@ tplink_board_detect() {
 	hwid=$(tplink_get_hwid)
 	mid=$(tplink_get_mid)
 	hwver=${hwid:6:2}
-	hwver="v${hwver#0}"
+	hwver=" v${hwver#0}"
 
 	case "$hwid" in
 	"015000"*)
@@ -107,23 +151,42 @@ tplink_board_detect() {
 	"015300"*)
 		model="EasyLink EL-MINI"
 		;;
-	"04440001"*)
-		model="BITMAIN ANTMINER S1"
+	"044401"*)
+		model="ANTMINER-S1"
 		;;
-	"04440003"*)
-		model="BITMAIN ANTMINER S3"
+	"044403"*)
+		model="ANTMINER-S3"
+		;;
+	"44440101"*)
+		model="ANTROUTER-R1"
 		;;
 	"120000"*)
 		model="MERCURY MAC1200R"
 		;;
+	"007260"*)
+		model="TellStick ZNet Lite"
+		;;
+	"066601"*)
+		model="OMYlink OMY-G1"
+		;;
+	"066602"*)
+		model="OMYlink OMY-X1"
+		;;
 	"3C0001"*)
 		model="OOLITE"
 		;;
-	"070300"*)
+	"3C0002"*)
+		model="MINIBOX_V1"
+		;;
+	"070301"*)
 		model="TP-Link TL-WR703N"
 		;;
 	"071000"*)
 		model="TP-Link TL-WR710N"
+
+		if [ "$hwid" = '07100002' -a "$mid" = '00000002' ]; then
+			hwver=' v2.1'
+		fi
 		;;
 	"072001"*)
 		model="TP-Link TL-WR720N"
@@ -155,15 +218,22 @@ tplink_board_detect() {
 	"080100"*)
 		model="TP-Link TL-WA801N/ND"
 		;;
+	"080200"*)
+		model="TP-Link TL-WR802N"
+		;;
 	"083000"*)
 		model="TP-Link TL-WA830RE"
 
-		if [ "$hwver" = 'v10' ]; then
-			hwver='v1'
+		if [ "$hwver" = ' v10' ]; then
+			hwver=' v1'
 		fi
 		;;
 	"084100"*)
 		model="TP-Link TL-WR841N/ND"
+
+		if [ "$hwid" = '08410002' -a "$mid" = '00000002' ]; then
+			hwver=' v1.5'
+		fi
 		;;
 	"084200"*)
 		model="TP-Link TL-WR842N/ND"
@@ -179,6 +249,9 @@ tplink_board_detect() {
 		;;
 	"090100"*)
 		model="TP-Link TL-WA901N/ND"
+		;;
+	"094000"*)
+		model="TP-Link TL-WR940N"
 		;;
 	"094100"*)
 		if [ "$hwid" = "09410002" -a "$mid" = "00420001" ]; then
@@ -221,6 +294,9 @@ tplink_board_detect() {
 	"342000"*)
 		model="TP-Link TL-MR3420"
 		;;
+	"332000"*)
+		model="TP-Link TL-WDR3320"
+		;;
 	"350000"*)
 		model="TP-Link TL-WDR3500"
 		;;
@@ -240,8 +316,11 @@ tplink_board_detect() {
 	"49000002")
 		model="TP-Link TL-WDR4900"
 		;;
+	"65000002")
+		model="TP-Link TL-WDR6500"
+		;;
 	"453000"*)
-		model="MERCURY MW4530R"
+		model="Mercury MW4530R"
 		;;
 	"934100"*)
 		model="NC-LINK SMART-300"
@@ -258,7 +337,7 @@ tplink_board_detect() {
 		;;
 	esac
 
-	AR71XX_MODEL="$model $hwver"
+	AR71XX_MODEL="$model$hwver"
 }
 
 tplink_pharos_get_model_string() {
@@ -274,24 +353,10 @@ tplink_pharos_get_model_string() {
 tplink_pharos_board_detect() {
 	local model_string="$(tplink_pharos_get_model_string | tr -d '\r')"
 	local oIFS="$IFS"; IFS=":"; set -- $model_string; IFS="$oIFS"
-	local model
 
-	case "$1" in
-	'CPE210(TP-LINK|UN|N300-2)')
-		model='TP-Link CPE210'
-		;;
-	'CPE220(TP-LINK|UN|N300-2)')
-		model='TP-Link CPE220'
-		;;
-	'CPE510(TP-LINK|UN|N300-5)')
-		model='TP-Link CPE510'
-		;;
-	'CPE520(TP-LINK|UN|N300-5)')
-		model='TP-Link CPE520'
-		;;
-	esac
+	local model="${1%%\(*}"
 
-	[ -n "$model" ] && AR71XX_MODEL="$model v$2"
+	AR71XX_MODEL="TP-Link $model v$2"
 }
 
 gl_inet_board_detect() {
@@ -317,14 +382,26 @@ ar71xx_board_detect() {
 	*"Oolite V1.0")
 		name="oolite"
 		;;
+	*"A40")
+		name="a40"
+		;;
+	*"A60")
+		name="a60"
+		;;
 	*"AC1750DB")
 		name="f9k1115v2"
 		;;
 	*"AirGateway")
 		name="airgateway"
 		;;
+	*"AirGateway Pro")
+		name="airgatewaypro"
+		;;
 	*"AirRouter")
 		name="airrouter"
+		;;
+	*"ALFA Network AP120C")
+		name="alfa-ap120c"
 		;;
 	*"ALFA Network AP96")
 		name="alfa-ap96"
@@ -341,10 +418,16 @@ ar71xx_board_detect() {
 	*ALL0315N)
 		name="all0315n"
 		;;
-	*AP113)
-		name="ap113"
+	*Antminer-S1)
+		name="antminer-s1"
 		;;
-	*AP121)
+	*Antminer-S3)
+		name="antminer-s3"
+		;;
+	*"Arduino Yun")
+		name="arduino-yun"
+		;;
+	*"AP121 reference board")
 		name="ap121"
 		;;
 	*AP121-MINI)
@@ -362,11 +445,17 @@ ar71xx_board_detect() {
 	*"AP135-020 reference board")
 		name="ap135-020"
 		;;
-	*AP81)
-		name="ap81"
+	*"AP143 reference board")
+		name="ap143"
 		;;
-	*AP83)
-		name="ap83"
+	*"AP147-010 reference board")
+		name="ap147-010"
+		;;
+	*"AP152 reference board")
+		name="ap152"
+		;;
+	*AP90Q)
+		name="ap90q"
 		;;
 	*"Archer C5")
 		name="archer-c5"
@@ -380,12 +469,69 @@ ar71xx_board_detect() {
 	*AW-NR580)
 		name="aw-nr580"
 		;;
+	*BHR-4GRV2)
+		name="bhr-4grv2"
+		;;
+	*CAP324)
+		name="cap324"
+		;;
+	*C-55)
+		name="c-55"
+		;;
+	*C-60)
+		name="c-60"
+		;;
 	*CAP4200AG)
 		name="cap4200ag"
 		;;
-	*"CPE210/220/510/520")
+	*"CF-E316N v2")
+		name="cf-e316n-v2"
+		;;
+	*"CF-E320N v2")
+		name="cf-e320n-v2"
+		;;
+	*"CF-E380AC v1")
+		name="cf-e380ac-v1"
+		;;
+	*"CF-E380AC v2")
+		name="cf-e380ac-v2"
+		;;
+	*CF-E520N)
+		name="cf-e520n"
+		;;
+	*CF-E530N)
+		name="cf-e530n"
+		;;
+	*"CPE210/220")
+		name="cpe210"
+		tplink_pharos_board_detect
+		;;
+	*"CPE510/520")
 		name="cpe510"
 		tplink_pharos_board_detect
+		;;
+	*CPE830)
+		name="cpe830"
+		;;
+	*CPE870)
+		name="cpe870"
+		;;
+	*WBS210)
+		name="wbs210"
+		tplink_pharos_board_detect
+		;;
+	*WBS510)
+		name="wbs510"
+		tplink_pharos_board_detect
+		;;
+	*CR3000)
+		name="cr3000"
+		;;
+	*CR5000)
+		name="cr5000"
+		;;
+	*"DAP-2695 rev. A1")
+		name="dap-2695-a1"
 		;;
 	*"DB120 reference board")
 		name="db120"
@@ -398,6 +544,7 @@ ar71xx_board_detect() {
 		;;
 	*"DIR-505 rev. A1")
 		name="dir-505-a1"
+		dir505_board_detect
 		;;
 	*"DIR-600 rev. A1")
 		name="dir-600-a1"
@@ -408,6 +555,9 @@ ar71xx_board_detect() {
 	*"DIR-615 rev. E4")
 		name="dir-615-e4"
 		;;
+	*"DIR-615 rev. I1")
+		name="dir-615-i1"
+		;;
 	*"DIR-825 rev. B1")
 		name="dir-825-b1"
 		;;
@@ -417,14 +567,39 @@ ar71xx_board_detect() {
 	*"DIR-835 rev. A1")
 		name="dir-835-a1"
 		;;
+	*"DIR-869 rev. A1")
+		name="dir-869-a1"
+		;;
+	*"dLAN Hotspot")
+		name="dlan-hotspot"
+		;;
 	*"dLAN pro 500 Wireless+")
 		name="dlan-pro-500-wp"
 		;;
 	*"dLAN pro 1200+ WiFi ac")
 		name="dlan-pro-1200-ac"
 		;;
+	*DR344)
+		name="dr344"
+		;;
+	*DR531)
+		name="dr531"
+		;;
 	*"Dragino v2")
 		name="dragino2"
+		;;
+	*"Domino Pi")
+		name="gl-domino"
+		;;
+	*"DW33D")
+		name="dw33d"
+		;;
+	*E2100L)
+		name="e2100l"
+		;;
+	*"EAP120")
+		name="eap120"
+		tplink_pharos_board_detect
 		;;
 	*"EAP300 v2")
 		name="eap300v2"
@@ -441,6 +616,18 @@ ar71xx_board_detect() {
 	*"GL-CONNECT INET v1")
 		name="gl-inet"
 		gl_inet_board_detect
+		;;
+	*"GL AR150")
+		name="gl-ar150"
+		;;
+	*"GL AR300")
+		name="gl-ar300"
+		;;
+	*"GL-AR300M")
+		name="gl-ar300m"
+		;;
+	*"GL-MIFI")
+		name="gl-mifi"
 		;;
 	*"EnGenius EPG5000")
 		name="epg5000"
@@ -459,18 +646,23 @@ ar71xx_board_detect() {
 		;;
 	*"Bullet M")
 		name="bullet-m"
+		ubnt_xm_board_detect
 		;;
 	*"Loco M XW")
 		name="loco-m-xw"
 		;;
 	*"Nanostation M")
 		name="nanostation-m"
+		ubnt_xm_board_detect
 		;;
 	*"Nanostation M XW")
 		name="nanostation-m-xw"
 		;;
 	*JWAP003)
 		name="jwap003"
+		;;
+	*JWAP230)
+		name="jwap230"
 		;;
 	*"Hornet-UB")
 		local size
@@ -490,14 +682,26 @@ ar71xx_board_detect() {
 	*"MAC1200R")
 		name="mc-mac1200r"
 		;;
+	*"MiniBox V1.0")
+		name="minibox-v1"
+		;;
 	*MR12)
 		name="mr12"
 		;;
 	*MR16)
 		name="mr16"
 		;;
+	*MR18)
+		name="mr18"
+		;;
 	*MR600v2)
 		name="mr600v2"
+		;;
+	*MR1750)
+		name="mr1750"
+		;;
+	*MR1750v2)
+		name="mr1750v2"
 		;;
 	*MR600)
 		name="mr600"
@@ -526,6 +730,9 @@ ar71xx_board_detect() {
 	*"NBG460N/550N/550NH")
 		name="nbg460n_550n_550nh"
 		;;
+	*"Zyxel NBG6616")
+		name="nbg6616"
+		;;
 	*"Zyxel NBG6716")
 		name="nbg6716"
 		;;
@@ -535,11 +742,20 @@ ar71xx_board_detect() {
 	*OM2Pv2)
 		name="om2pv2"
 		;;
+	*OM2Pv4)
+		name="om2pv4"
+		;;
 	*"OM2P HS")
 		name="om2p-hs"
 		;;
 	*"OM2P HSv2")
 		name="om2p-hsv2"
+		;;
+	*"OM2P HSv3")
+		name="om2p-hsv3"
+		;;
+	*"OM2P HSv4")
+		name="om2p-hsv4"
 		;;
 	*"OM2P LC")
 		name="om2p-lc"
@@ -550,6 +766,18 @@ ar71xx_board_detect() {
 	*"OM5P AN")
 		name="om5p-an"
 		;;
+	*"OM5P AC")
+		name="om5p-ac"
+		;;
+	*"OM5P ACv2")
+		name="om5p-acv2"
+		;;
+	*"OMY-X1")
+		name="omy-x1"
+		;;
+	*"OMY-G1")
+		name="omy-g1"
+		;;
 	*"Onion Omega")
 		name="onion-omega"
 		;;
@@ -559,11 +787,11 @@ ar71xx_board_detect() {
 	*"PB44 reference board")
 		name="pb44"
 		;;
-	*PB92)
-		name="pb92"
-		;;
 	*"Qihoo 360 C301")
 		name="qihoo-c301"
+		;;
+	*"RE450")
+		name="re450"
 		;;
 	*"RouterBOARD 411/A/AH")
 		name="rb-411"
@@ -619,6 +847,9 @@ ar71xx_board_detect() {
 	*"RouterBOARD 912UAG-5HPnD")
 		name="rb-912uag-5hpnd"
 		;;
+	*"RouterBOARD 941-2nD")
+		name="rb-941-2nd"
+		;;
 	*"RouterBOARD 951G-2HnD")
 		name="rb-951g-2hnd"
 		;;
@@ -648,6 +879,10 @@ ar71xx_board_detect() {
 		;;
 	*"Rocket M")
 		name="rocket-m"
+		ubnt_xm_board_detect
+		;;
+	*"Rocket M TI")
+		name="rocket-m-ti"
 		;;
 	*"Rocket M XW")
 		name="rocket-m-xw"
@@ -667,6 +902,15 @@ ar71xx_board_detect() {
 	"Smart Electronics Black Swift board"*)
 		name="bsb"
 		;;
+	*"Telldus TellStick ZNet Lite")
+		name="tellstick-znet-lite"
+		;;
+	*SOM9331)
+		name="som9331"
+		;;
+	*SR3200)
+		name="sr3200"
+		;;
 	*TEW-632BRP)
 		name="tew-632brp"
 		;;
@@ -679,6 +923,9 @@ ar71xx_board_detect() {
 	*TEW-732BR)
 		name="tew-732br"
 		;;
+	*TEW-823DRU)
+		name="tew-823dru"
+		;;
 	*"TL-WR1041N v2")
 		name="tl-wr1041n-v2"
 		;;
@@ -687,6 +934,9 @@ ar71xx_board_detect() {
 		;;
 	*"TL-WR1043ND v2")
 		name="tl-wr1043nd-v2"
+		;;
+	*"TL-WR1043ND v4")
+		name="tl-wr1043nd-v4"
 		;;
 	*TL-WR2543N*)
 		name="tl-wr2543n"
@@ -739,6 +989,12 @@ ar71xx_board_detect() {
 	*"TL-WA801ND v2")
 		name="tl-wa801nd-v2"
 		;;
+	*"TL-WA801ND v3")
+		name="tl-wa801nd-v3"
+		;;
+	*"TL-WR802N v1")
+		name="tl-wr802n-v1"
+		;;
 	*TL-WA901ND)
 		name="tl-wa901nd"
 		;;
@@ -748,6 +1004,12 @@ ar71xx_board_detect() {
 	*"TL-WA901ND v3")
 		name="tl-wa901nd-v3"
 		;;
+	*"TL-WA901ND v4")
+		name="tl-wa901nd-v4"
+		;;
+	*"TL-WDR3320 v2")
+		name="tl-wdr3320-v2"
+		;;
 	*"TL-WDR3500")
 		name="tl-wdr3500"
 		;;
@@ -756,6 +1018,12 @@ ar71xx_board_detect() {
 		;;
 	*"TL-WDR4900 v2")
 		name="tl-wdr4900-v2"
+		;;
+	*"TL-WDR6500 v2")
+		name="tl-wdr6500-v2"
+		;;
+	*TL-WPA8630)
+		name="tl-wpa8630"
 		;;
 	*TL-WR741ND)
 		name="tl-wr741nd"
@@ -775,14 +1043,26 @@ ar71xx_board_detect() {
 	*"TL-WR841N/ND v9")
 		name="tl-wr841n-v9"
 		;;
+	*"TL-WR841N/ND v11")
+		name="tl-wr841n-v11"
+		;;
 	*"TL-WR842N/ND v2")
 		name="tl-wr842n-v2"
+		;;
+	*"TL-WR842N/ND v3")
+		name="tl-wr842n-v3"
 		;;
 	*TL-WR941ND)
 		name="tl-wr941nd"
 		;;
 	*"TL-WR941N/ND v5")
 		name="tl-wr941nd-v5"
+		;;
+	*"TL-WR941N/ND v6")
+		name="tl-wr941nd-v6"
+		;;
+	*"TL-WR940N v4")
+		name="tl-wr940n-v4"
 		;;
 	*"TL-WR703N v1")
 		name="tl-wr703n"
@@ -792,6 +1072,9 @@ ar71xx_board_detect() {
 		;;
 	*"TL-WR720N"*)
 		name="tl-wr720n-v3"
+		;;
+	*"TL-WR810N")
+		name="tl-wr810n"
 		;;
 	*"TL-MR10U")
 		name="tl-mr10u"
@@ -811,8 +1094,17 @@ ar71xx_board_detect() {
 	*UniFi)
 		name="unifi"
 		;;
+	*"UniFi-AC-LITE")
+		name="unifiac-lite"
+		;;
+	*"UniFi-AC-PRO")
+		name="unifiac-pro"
+		;;
 	*"UniFi AP Pro")
 		name="uap-pro"
+		;;
+	"WeIO"*)
+		name="weio"
 		;;
 	*WHR-G301N)
 		name="whr-g301n"
@@ -834,6 +1126,9 @@ ar71xx_board_detect() {
 		;;
 	*WPE72)
 		name="wpe72"
+		;;
+	*WPJ342)
+		name="wpj342"
 		;;
 	*WPJ344)
 		name="wpj344"
@@ -877,11 +1172,17 @@ ar71xx_board_detect() {
 	*"WNR1000 V2")
 		name="wnr1000-v2"
 		;;
+	*WPN824N)
+		name="wpn824n"
+		;;
 	*WRT160NL)
 		name="wrt160nl"
 		;;
 	*WRT400N)
 		name="wrt400n"
+		;;
+	*"WRTnode2Q board")
+		name="wrtnode2q"
 		;;
 	*"WZR-450HP2")
 		name="wzr-450hp2"
@@ -900,6 +1201,15 @@ ar71xx_board_detect() {
 		;;
 	*WHR-HP-G300N)
 		name="whr-hp-g300n"
+		;;
+	*XD3200)
+		name="xd3200"
+		;;
+	*Z1)
+		name="z1"
+		;;
+	*ZBT-WE1526)
+		name="zbt-we1526"
 		;;
 	*ZCN-1523H-2)
 		name="zcn-1523h-2"

@@ -5,8 +5,15 @@
 # See /LICENSE for more information.
 #
 
+ifneq ($(filter check,$(MAKECMDGOALS)),)
+CHECK:=1
+DUMP:=1
+endif
+
 ifeq ($(__target_inc),)
-  include $(INCLUDE_DIR)/target.mk
+  ifndef CHECK
+    include $(INCLUDE_DIR)/target.mk
+  endif
 endif
 
 ifeq ($(DUMP),1)
@@ -30,8 +37,8 @@ else
   endif
 
   ifeq ($(TARGET_BUILD),1)
-    PATCH_DIR ?= ./patches$(if $(wildcard ./patches-$(KERNEL_PATCHVER)),-$(KERNEL_PATCHVER))
-    FILES_DIR ?= $(foreach dir,$(wildcard ./files ./files-$(KERNEL_PATCHVER)),"$(dir)")
+    PATCH_DIR ?= $(CURDIR)/patches$(if $(wildcard ./patches-$(KERNEL_PATCHVER)),-$(KERNEL_PATCHVER))
+    FILES_DIR ?= $(foreach dir,$(wildcard $(CURDIR)/files $(CURDIR)/files-$(KERNEL_PATCHVER)),"$(dir)")
   endif
   KERNEL_BUILD_DIR ?= $(BUILD_DIR)/linux-$(BOARD)$(if $(SUBTARGET),_$(SUBTARGET))
   LINUX_DIR ?= $(KERNEL_BUILD_DIR)/linux-$(LINUX_VERSION)
@@ -44,7 +51,7 @@ else
     LINUX_UNAME_VERSION:=$(LINUX_UNAME_VERSION)-$(strip $(lastword $(subst -, ,$(LINUX_VERSION))))
   endif
 
-  MODULES_SUBDIR:=lib/modules/$(LINUX_UNAME_VERSION)-$(LINUX_VERMAGIC)
+  MODULES_SUBDIR:=lib/modules/$(LINUX_UNAME_VERSION)
   TARGET_MODULES_DIR := $(LINUX_TARGET_DIR)/$(MODULES_SUBDIR)
 
   LINUX_KERNEL:=$(KERNEL_BUILD_DIR)/vmlinux
@@ -62,15 +69,17 @@ endif
 
 ifneq (,$(findstring uml,$(BOARD)))
   LINUX_KARCH=um
-else ifneq (,$(findstring $(ARCH), aarch64 aarch64_be))
+else ifneq (,$(findstring $(ARCH) , aarch64 aarch64_be ))
   LINUX_KARCH := arm64
-else ifneq (,$(findstring $(ARCH), armeb))
+else ifneq (,$(findstring $(ARCH) , arceb ))
+  LINUX_KARCH := arc
+else ifneq (,$(findstring $(ARCH) , armeb ))
   LINUX_KARCH := arm
-else ifneq (,$(findstring $(ARCH), mipsel mips64 mips64el))
+else ifneq (,$(findstring $(ARCH) , mipsel mips64 mips64el ))
   LINUX_KARCH := mips
-else ifneq (,$(findstring $(ARCH), sh2 sh3 sh4))
+else ifneq (,$(findstring $(ARCH) , sh2 sh3 sh4 ))
   LINUX_KARCH := sh
-else ifneq (,$(findstring $(ARCH), i386 x86_64))
+else ifneq (,$(findstring $(ARCH) , i386 x86_64 ))
   LINUX_KARCH := x86
 else
   LINUX_KARCH := $(ARCH)
@@ -79,21 +88,23 @@ endif
 define KernelPackage/Defaults
   FILES:=
   AUTOLOAD:=
+  PKGFLAGS+=nonshared
 endef
 
 define ModuleAutoLoad
 	$(SH_FUNC) \
 	export modules=; \
 	probe_module() { \
-		mods="$$$$$$$$1"; \
-		boot="$$$$$$$$2"; \
+		local mods="$$$$$$$$1"; \
+		local boot="$$$$$$$$2"; \
+		local mod; \
 		shift 2; \
 		for mod in $$$$$$$$mods; do \
 			mkdir -p $(2)/etc/modules.d; \
 			echo "$$$$$$$$mod" >> $(2)/etc/modules.d/$(1); \
 		done; \
 		if [ -e $(2)/etc/modules.d/$(1) ]; then \
-			if [ "$$$$$$$$boot" = "1" ]; then \
+			if [ "$$$$$$$$boot" = "1" -a ! -e $(2)/etc/modules-boot.d/$(1) ]; then \
 				mkdir -p $(2)/etc/modules-boot.d; \
 				ln -s ../modules.d/$(1) $(2)/etc/modules-boot.d/; \
 			fi; \
@@ -101,16 +112,17 @@ define ModuleAutoLoad
 		fi; \
 	}; \
 	add_module() { \
-		priority="$$$$$$$$1"; \
-		mods="$$$$$$$$2"; \
-		boot="$$$$$$$$3"; \
+		local priority="$$$$$$$$1"; \
+		local mods="$$$$$$$$2"; \
+		local boot="$$$$$$$$3"; \
+		local mod; \
 		shift 3; \
 		for mod in $$$$$$$$mods; do \
 			mkdir -p $(2)/etc/modules.d; \
 			echo "$$$$$$$$mod" >> $(2)/etc/modules.d/$$$$$$$$priority-$(1); \
 		done; \
 		if [ -e $(2)/etc/modules.d/$$$$$$$$priority-$(1) ]; then \
-			if [ "$$$$$$$$boot" = "1" ]; then \
+			if [ "$$$$$$$$boot" = "1" -a ! -e $(2)/etc/modules-boot.d/$$$$$$$$priority-$(1) ]; then \
 				mkdir -p $(2)/etc/modules-boot.d; \
 				ln -s ../modules.d/$$$$$$$$priority-$(1) $(2)/etc/modules-boot.d/; \
 			fi; \
@@ -119,6 +131,7 @@ define ModuleAutoLoad
 	}; \
 	$(3) \
 	if [ -n "$$$$$$$$modules" ]; then \
+		modules="$$$$$$$$(echo "$$$$$$$$modules" | tr ' ' '\n' | sort | uniq | paste -s -d' ')"; \
 		mkdir -p $(2)/etc/modules.d; \
 		mkdir -p $(2)/CONTROL; \
 		echo "#!/bin/sh" > $(2)/CONTROL/postinst-pkg; \
@@ -145,6 +158,7 @@ define KernelPackage
   $(eval $(call KernelPackage/Defaults))
   $(eval $(call KernelPackage/$(1)))
   $(eval $(call KernelPackage/$(1)/$(BOARD)))
+  $(eval $(call KernelPackage/$(1)/$(BOARD)/$(if $(SUBTARGET),$(SUBTARGET),generic)))
 
   define Package/kmod-$(1)
     TITLE:=$(TITLE)
@@ -152,9 +166,11 @@ define KernelPackage
     CATEGORY:=Kernel modules
     DESCRIPTION:=$(DESCRIPTION)
     EXTRA_DEPENDS:=kernel (=$(LINUX_VERSION)-$(LINUX_RELEASE)-$(LINUX_VERMAGIC))
-    VERSION:=$(LINUX_VERSION)$(if $(PKG_VERSION),+$(PKG_VERSION))-$(if $(PKG_RELEASE),$(PKG_RELEASE)-$(LINUX_VERMAGIC),$(LINUX_RELEASE)-$(LINUX_VERMAGIC))
+    VERSION:=$(LINUX_VERSION)$(if $(PKG_VERSION),+$(PKG_VERSION))-$(if $(PKG_RELEASE),$(PKG_RELEASE),$(LINUX_RELEASE))
+    PKGFLAGS:=$(PKGFLAGS)
     $(call KernelPackage/$(1))
     $(call KernelPackage/$(1)/$(BOARD))
+    $(call KernelPackage/$(1)/$(BOARD)/$(if $(SUBTARGET),$(SUBTARGET),generic))
   endef
 
   ifdef KernelPackage/$(1)/conffiles
@@ -178,21 +194,17 @@ $(call KernelPackage/$(1)/config)
   $(call KernelPackage/depends)
 
   ifneq ($(if $(filter-out %=y %=n %=m,$(KCONFIG)),$(filter m y,$(foreach c,$(filter-out %=y %=n %=m,$(KCONFIG)),$($(c)))),.),)
-    ifneq ($(if $(SDK),$(filter-out $(LINUX_DIR)/%.ko,$(FILES)),$(strip $(FILES))),)
+    ifneq ($(strip $(FILES)),)
       define Package/kmod-$(1)/install
 		  @for mod in $$(call version_filter,$$(FILES)); do \
-			if [ -e $$$$$$$$mod ]; then \
+			if grep -q "$$$$$$$${mod##$(LINUX_DIR)/}" "$(LINUX_DIR)/modules.builtin"; then \
+				echo "NOTICE: module '$$$$$$$$mod' is built-in."; \
+			elif [ -e $$$$$$$$mod ]; then \
 				mkdir -p $$(1)/$(MODULES_SUBDIR) ; \
 				$(CP) -L $$$$$$$$mod $$(1)/$(MODULES_SUBDIR)/ ; \
-			elif [ -e "$(LINUX_DIR)/modules.builtin" ]; then \
-				if grep -q "$$$$$$$${mod##$(LINUX_DIR)/}" "$(LINUX_DIR)/modules.builtin"; then \
-					echo "NOTICE: module '$$$$$$$$mod' is built-in."; \
-				else \
-					echo "ERROR: module '$$$$$$$$mod' is missing." >&2; \
-					exit 1; \
-				fi; \
 			else \
-				echo "WARNING: module '$$$$$$$$mod' missing and modules.builtin not available, assuming built-in." >&2; \
+				echo "ERROR: module '$$$$$$$$mod' is missing." >&2; \
+				exit 1; \
 			fi; \
 		  done;
 		  $(call ModuleAutoLoad,$(1),$$(1),$(AUTOLOAD))
@@ -215,7 +227,7 @@ $(call KernelPackage/$(1)/config)
   $$(IPKG_kmod-$(1)): $$(wildcard $$(FILES))
 endef
 
-version_filter=$(if $(findstring @,$(1)),$(shell $(SCRIPT_DIR)/metadata.pl version_filter $(KERNEL_PATCHVER) $(1)),$(1))
+version_filter=$(if $(findstring @,$(1)),$(shell $(SCRIPT_DIR)/package-metadata.pl version_filter $(KERNEL_PATCHVER) $(1)),$(1))
 
 define AutoLoad
   add_module "$(1)" "$(call version_filter,$(2))" "$(3)";

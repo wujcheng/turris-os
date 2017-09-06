@@ -36,9 +36,9 @@ boot() {
 	mkdir -p /var/log
 	mkdir -p /var/lock
 	mkdir -p /var/state
+	mkdir -p /var/tmp
 	mkdir -p /tmp/.uci
 	chmod 0700 /tmp/.uci
-	mkdir -p /tmp/.jail
 	touch /var/log/wtmp
 	touch /var/log/lastlog
 	touch /tmp/resolv.conf.auto
@@ -46,35 +46,16 @@ boot() {
 	grep -q debugfs /proc/filesystems && /bin/mount -o noatime -t debugfs debugfs /sys/kernel/debug
 	[ "$FAILSAFE" = "true" ] && touch /tmp/.failsafe
 
-	REG="`sed -n 's|.*cfg80211.freg=\([A-Z0][A-Z0]\).*|\1|p' /proc/cmdline`"
-	if [ -f /lib/wifi/mac80211.sh ] && [ "$REG" ] &&\
-	   [ "`sed -n 's|.*freg=||p' /etc/modules.d/00-wireless`" \!= "$REG" ]; then
-		echo "cfg80211 freg=$REG" > /etc/modules.d/00-wireless
-	else
-		rm -f /etc/modules.d/00-wireless
-	fi
 	/sbin/kmodloader
 
-	# allow wifi modules time to settle
-	sleep 1
-	[ -z "$REG" ] || iw reg set $REG
-
-	/sbin/wifi detect > /tmp/wireless.tmp
-	[ -s /tmp/wireless.tmp ] && {
-		cat /tmp/wireless.tmp >> /etc/config/wireless
+	[ ! -f /etc/config/wireless ] && {
+		# compat for brcm47xx and mvebu
+		sleep 1
 	}
-	rm -f /tmp/wireless.tmp
 
-	feed_urandom
-	/bin/board_detect
+	/bin/config_generate
 	uci_apply_defaults
 	
 	# temporary hack until configd exists
 	/sbin/reload_config
-
-	# create /dev/root if it doesn't exist
-	[ -e /dev/root -o -h /dev/root ] || {
-		rootdev=$(awk 'BEGIN { RS=" "; FS="="; } $1 == "root" { print $2 }' < /proc/cmdline)
-		[ -n "$rootdev" ] && ln -s "$rootdev" /dev/root
-	}
 }

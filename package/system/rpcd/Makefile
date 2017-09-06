@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013-2015 OpenWrt.org
+# Copyright (C) 2013-2016 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,20 +8,18 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=rpcd
-PKG_VERSION:=2015-05-17
-PKG_RELEASE=$(PKG_SOURCE_VERSION)-2
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=git://nbd.name/luci2/rpcd.git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)
-PKG_SOURCE_VERSION:=3d655417ab44d93aad56a6d4a668daf24b127b84
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
-PKG_MAINTAINER:=Jo-Philipp Wich <jow@openwrt.org>
+PKG_SOURCE_URL=$(LEDE_GIT)/project/rpcd.git
+PKG_SOURCE_DATE:=2016-12-03
+PKG_SOURCE_VERSION:=0577cfc1acdbaf30c31090e75045ba58d6dd8a78
+PKG_MAINTAINER:=Jo-Philipp Wich <jo@mein.io>
+PKG_MIRROR_HASH:=bbcd750df4867a57604e3b922e28f7a019cf940c3586d813d88001dc314e2a1c
 
 PKG_LICENSE:=ISC
 PKG_LICENSE_FILES:=
 
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 PKG_BUILD_PARALLEL:=1
 
 include $(INCLUDE_DIR)/package.mk
@@ -52,6 +50,8 @@ endef
 define Package/rpcd/conffiles
 /etc/config/rpcd
 endef
+
+TARGET_LDFLAGS += -lcrypt
 
 define Package/rpcd/install
 	$(INSTALL_DIR) $(1)/etc/init.d
@@ -99,4 +99,5 @@ endef
 
 $(eval $(call BuildPackage,rpcd))
 $(eval $(call BuildPlugin,file,,Provides ubus calls for file and directory operations.))
+$(eval $(call BuildPlugin,rpcsys,,Provides ubus calls for sysupgrade and password changing.))
 $(eval $(call BuildPlugin,iwinfo,+libiwinfo,Provides ubus calls for accessing iwinfo data.))

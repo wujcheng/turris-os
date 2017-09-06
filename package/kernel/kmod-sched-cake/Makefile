@@ -9,15 +9,13 @@ include $(TOPDIR)/rules.mk
 include $(INCLUDE_DIR)/kernel.mk
 
 PKG_NAME:=sched-cake
-PKG_SOURCE_VERSION:=70c8eb766d5afcf3cf187594b7cd776da92bee3c
-PKG_VERSION:=2016-12-19-$(PKG_SOURCE_VERSION)
 PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/kdarbyshirebryant/sch_cake.git
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_MIRROR_MD5SUM:=16174db5dad0a5b5ba522d4cfc058cff9851ed013a3a05166b04eb127bb12a24
+PKG_SOURCE_URL:=https://github.com/dtaht/sch_cake.git
+PKG_SOURCE_DATE:=2017-01-28
+PKG_SOURCE_VERSION:=9789742cfc596d48583ba4cdbc8f38d026121fa6
+PKG_MIRROR_HASH:=2a5afc45722c28ca8778eb50452eb305306e7898b32d7d6d73d3e77edf3cce99
 PKG_MAINTAINER:=Kevin Darbyshire-Bryant <kevin@darbyshire-bryant.me.uk>
 
 include $(INCLUDE_DIR)/package.mk

@@ -43,7 +43,7 @@ Building images:
 	make image PACKAGES="<pkg1> [<pkg2> [<pkg3> ...]]" # include extra packages
 	make image FILES="<path>" # include extra files from <path>
 	make image BIN_DIR="<path>" # alternative output directory for the images
-
+	make image EXTRA_IMAGE_NAME="<string>" # Add this to the output image filename (sanitized)
 endef
 $(eval $(call shexport,Helptext))
 
@@ -53,37 +53,47 @@ help: FORCE
 
 # override variables from rules.mk
 PACKAGE_DIR:=$(TOPDIR)/packages
+LISTS_DIR:=$(subst $(space),/,$(patsubst %,..,$(subst /,$(space),$(TARGET_DIR))))$(DL_DIR)
 OPKG:= \
   IPKG_NO_SCRIPT=1 \
-  IPKG_TMP="$(TMP_DIR)/ipkgtmp" \
   IPKG_INSTROOT="$(TARGET_DIR)" \
-  IPKG_CONF_DIR="$(TMP_DIR)" \
-  IPKG_OFFLINE_ROOT="$(TARGET_DIR)" \
   $(STAGING_DIR_HOST)/bin/opkg \
 	-f $(TOPDIR)/repositories.conf \
 	--force-depends \
 	--force-overwrite \
 	--force-postinstall \
 	--cache $(DL_DIR) \
+	--lists-dir $(LISTS_DIR) \
 	--offline-root $(TARGET_DIR) \
 	--add-dest root:/ \
 	--add-arch all:100 \
 	--add-arch $(ARCH_PACKAGES):200
 
-define Profile
-  $(eval $(call Profile/Default))
-  $(eval $(call Profile/$(1)))
-  ifeq ($(USER_PROFILE),)
-    USER_PROFILE:=$(1)
-  endif
-  $(1)_NAME:=$(NAME)
-  $(1)_PACKAGES:=$(PACKAGES)
-  PROFILE_NAMES += $(1)
-  PROFILE_LIST += \
-  	echo '$(1):'; [ -z '$(NAME)' ] || echo '	$(NAME)'; echo '	Packages: $(PACKAGES)';
-endef
-
 include $(INCLUDE_DIR)/target.mk
+-include .profiles.mk
+
+USER_PROFILE ?= $(firstword $(PROFILE_NAMES))
+PROFILE_LIST = $(foreach p,$(PROFILE_NAMES), \
+	echo '$(patsubst DEVICE_%,%,$(p)):'; $(if $($(p)_NAME),echo '    $(subst ','"'"',$($(p)_NAME))'; ) echo '    Packages: $($(p)_PACKAGES)'; \
+)
+
+.profiles.mk: .targetinfo
+	$(SCRIPT_DIR)/target-metadata.pl profile_mk $< '$(BOARD)$(if $(SUBTARGET),/$(SUBTARGET))' > $@
+
+staging_dir/host/.prereq-build: include/prereq-build.mk
+	mkdir -p tmp
+	rm -f tmp/.host.mk
+	@$(_SINGLE)$(NO_TRACE_MAKE) -j1 -r -s -f $(TOPDIR)/include/prereq-build.mk prereq 2>/dev/null || { \
+		echo "Prerequisite check failed. Use FORCE=1 to override."; \
+		false; \
+	}
+  ifneq ($(realpath $(TOPDIR)/include/prepare.mk),)
+	@$(_SINGLE)$(NO_TRACE_MAKE) -j1 -r -s -f $(TOPDIR)/include/prepare.mk prepare 2>/dev/null || { \
+		echo "Preparation failed."; \
+		false; \
+	}
+  endif
+	touch $@
 
 _call_info: FORCE
 	echo 'Current Target: "$(BOARD)$(if $(SUBTARGET), ($(BOARDNAME)))"'
@@ -91,12 +101,12 @@ _call_info: FORCE
 	echo 'Available Profiles:'
 	echo; $(PROFILE_LIST)
 
-BUILD_PACKAGES:=$(sort $(DEFAULT_PACKAGES) $(USER_PACKAGES) $($(USER_PROFILE)_PACKAGES) kernel)
+BUILD_PACKAGES:=$(USER_PACKAGES) $(sort $(DEFAULT_PACKAGES) $($(USER_PROFILE)_PACKAGES) kernel)
 # "-pkgname" in the package list means remove "pkgname" from the package list
 BUILD_PACKAGES:=$(filter-out $(filter -%,$(BUILD_PACKAGES)) $(patsubst -%,%,$(filter -%,$(BUILD_PACKAGES))),$(BUILD_PACKAGES))
 PACKAGES:=
 
-_call_image:
+_call_image: staging_dir/host/.prereq-build
 	echo 'Building images for $(BOARD)$(if $($(USER_PROFILE)_NAME), - $($(USER_PROFILE)_NAME))'
 	echo 'Packages: $(BUILD_PACKAGES)'
 	echo
@@ -115,13 +125,14 @@ ifneq ($(USER_FILES),)
 endif
 	$(MAKE) package_postinst
 	$(MAKE) build_image
+	$(MAKE) checksum
 
 package_index: FORCE
 	@echo
 	@echo Building package index...
 	@mkdir -p $(TMP_DIR) $(TARGET_DIR)/tmp
 	(cd $(PACKAGE_DIR); $(SCRIPT_DIR)/ipkg-make-index.sh . > Packages && \
-		gzip -9c Packages > Packages.gz \
+		gzip -9nc Packages > Packages.gz \
 	) >/dev/null 2>/dev/null
 	$(OPKG) update || true
 
@@ -157,8 +168,13 @@ package_postinst: FORCE
 build_image: FORCE
 	@echo
 	@echo Building images...
-	$(NO_TRACE_MAKE) -C target/linux/$(BOARD)/image install TARGET_BUILD=1 IB=1 \
+	$(NO_TRACE_MAKE) -C target/linux/$(BOARD)/image install TARGET_BUILD=1 IB=1 EXTRA_IMAGE_NAME="$(EXTRA_IMAGE_NAME)" \
 		$(if $(USER_PROFILE),PROFILE="$(USER_PROFILE)")
+
+checksum: FORCE
+	@echo
+	@echo Calculating checksums...
+	@$(call sha256sums,$(BIN_DIR))
 
 clean:
 	rm -rf $(TMP_DIR) $(DL_DIR) $(TARGET_DIR) $(BIN_DIR)
@@ -167,9 +183,11 @@ clean:
 info:
 	(unset PROFILE FILES PACKAGES MAKEFLAGS; $(MAKE) -s _call_info)
 
+PROFILE_FILTER = $(filter DEVICE_$(PROFILE) $(PROFILE),$(PROFILE_NAMES))
+
 image:
 ifneq ($(PROFILE),)
-  ifeq ($(filter $(PROFILE),$(PROFILE_NAMES)),)
+  ifeq ($(PROFILE_FILTER),)
 	@echo 'Profile "$(PROFILE)" does not exist!'
 	@echo 'Use "make info" to get a list of available profile names.'
 	@exit 1
@@ -177,7 +195,7 @@ ifneq ($(PROFILE),)
 endif
 	(unset PROFILE FILES PACKAGES MAKEFLAGS; \
 	$(MAKE) _call_image \
-		$(if $(PROFILE),USER_PROFILE="$(PROFILE)") \
+		$(if $(PROFILE),USER_PROFILE="$(PROFILE_FILTER)") \
 		$(if $(FILES),USER_FILES="$(FILES)") \
 		$(if $(PACKAGES),USER_PACKAGES="$(PACKAGES)") \
 		$(if $(BIN_DIR),BIN_DIR="$(BIN_DIR)"))

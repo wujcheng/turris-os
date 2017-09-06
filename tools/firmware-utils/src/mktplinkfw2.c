@@ -144,8 +144,20 @@ static struct flash_layout layouts[] = {
 		.kernel_ep	= 0x80002000,
 		.rootfs_ofs	= 0x140000,
 	}, {
+		.id		= "16Mltq",
+		.fw_max_len	= 0xf90000,
+		.kernel_la	= 0x80002000,
+		.kernel_ep	= 0x800061b0,
+		.rootfs_ofs	= 0x140000,
+	}, {
 		.id		= "8Mmtk",
 		.fw_max_len	= 0x7a0000,
+		.kernel_la	= 0x80000000,
+		.kernel_ep	= 0x80000000,
+		.rootfs_ofs	= 0x140000,
+	}, {
+		.id		= "8MLmtk",
+		.fw_max_len	= 0x7b0000,
 		.kernel_la	= 0x80000000,
 		.kernel_ep	= 0x80000000,
 		.rootfs_ofs	= 0x140000,
@@ -161,10 +173,35 @@ static struct board_info boards[] = {
 		.hw_rev		= 1,
 		.layout_id	= "8Mltq",
 	}, {
+		.id		= "TD-W8980v1",
+		.hw_id		= 0x89800001,
+		.hw_rev		= 14,
+		.layout_id	= "8Mltq",
+	}, {
 		.id		= "ArcherC20i",
 		.hw_id		= 0xc2000001,
 		.hw_rev		= 58,
 		.layout_id	= "8Mmtk",
+		.hdr_ver	= 3,
+		.endian_swap	= true,
+	}, {
+		.id		= "ArcherVR200V",
+		.hw_id		= 0x73b70801,
+		.hw_rev		= 0x2f,
+		.layout_id	= "16Mltq",
+		.hdr_ver	= 2,
+	}, {
+		.id		= "ArcherC50",
+		.hw_id		= 0xc7500001,
+		.hw_rev		= 69,
+		.layout_id	= "8Mmtk",
+		.hdr_ver	= 3,
+		.endian_swap	= true,
+	}, {
+		.id		= "ArcherMR200",
+		.hw_id		= 0xd7500001,
+		.hw_rev		= 0x4a,
+		.layout_id	= "8MLmtk",
 		.hdr_ver	= 3,
 		.endian_swap	= true,
 	}, {
@@ -184,7 +221,7 @@ static struct board_info boards[] = {
 #define ERRS(fmt, ...) do { \
 	int save = errno; \
 	fflush(0); \
-	fprintf(stderr, "[%s] *** error: " fmt "\n", \
+	fprintf(stderr, "[%s] *** error: " fmt ": %s\n", \
 			progname, ## __VA_ARGS__, strerror(save)); \
 } while (0)
 

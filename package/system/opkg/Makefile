@@ -11,22 +11,22 @@ include $(INCLUDE_DIR)/version.mk
 include $(INCLUDE_DIR)/feeds.mk
 
 PKG_NAME:=opkg
-PKG_RELEASE:=2
+PKG_RELEASE:=3
+PKG_FLAGS:=essential
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://git.lede-project.org/project/opkg-lede.git
 PKG_SOURCE_DATE:=2017-03-23
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_SOURCE_VERSION).tar.gz
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)
 PKG_SOURCE_VERSION:=1d0263bb40e3c099501fc1f2431907636230e7f2
 PKG_MIRROR_HASH:=1f527179e60b9404affa5f3c9c506d4249e085bf521f770819b8648273a1010c
 
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=COPYING
 
-PKG_MAINTAINER:=Jo-Philipp Wich <jow@openwrt.org>
+PKG_MAINTAINER:=Jo-Philipp Wich <jo@mein.io>
 
-PKG_CONFIG_DEPENDS := CONFIG_SIGNED_PACKAGES
+PKG_FLAGS := nonshared
+PKG_CONFIG_DEPENDS := CONFIG_SIGNED_PACKAGES CONFIG_TARGET_INIT_PATH
 
 PKG_BUILD_PARALLEL:=1
 HOST_BUILD_PARALLEL:=1
@@ -57,21 +57,14 @@ define Package/opkg/description
   opkg knows how to install both .ipk and .deb packages.
 endef
 
-define Package/opkg/config
-config OPKG_SUPPORT_MD5
-  bool
-  default n
-  depends on PACKAGE_opkg
-  prompt "Support reading old md5 hashes."
-  help
-	Old opkg used md5s, new uses sha. This options enables understanding both while prefering sha.
-endef
-
 define Package/opkg/conffiles
 /etc/opkg.conf
 /etc/opkg/keys/
 /etc/opkg/customfeeds.conf
 endef
+
+TARGET_CFLAGS += -ffunction-sections -fdata-sections
+EXTRA_CFLAGS += $(TARGET_CPPFLAGS)
 
 CMAKE_OPTIONS += \
 	-DBUILD_TESTS=OFF \
@@ -97,11 +90,11 @@ define Package/opkg/install
 	$(VERSION_SED) $(1)/etc/opkg/distfeeds.conf
 	$(INSTALL_BIN) ./files/20_migrate-feeds $(1)/etc/uci-defaults/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/opkg-cl $(1)/bin/opkg-cl
-    ifneq ($(CONFIG_SIGNED_PACKAGES),)
+  ifneq ($(CONFIG_SIGNED_PACKAGES),)
 	echo "option check_signature 1" >> $(1)/etc/opkg.conf
-    endif
+  endif
 	$(INSTALL_BIN) ./files/opkg_wrapper.sh $(1)/bin/opkg
-	mkdir $(1)/usr/sbin
+	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) ./files/opkg-key $(1)/usr/sbin/
 endef
 

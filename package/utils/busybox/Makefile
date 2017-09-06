@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006-2015 OpenWrt.org
+# Copyright (C) 2006-2016 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -9,13 +9,13 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=busybox
 PKG_VERSION:=1.25.1
-PKG_RELEASE:=3
+PKG_RELEASE:=4
 PKG_FLAGS:=essential
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_URL:=http://www.busybox.net/downloads \
-		http://distfiles.gentoo.org/distfiles/
-PKG_MD5SUM:=4f4c5de50b479b11ff636d7d8eb902a2
+PKG_SOURCE_URL:=https://www.busybox.net/downloads \
+		http://sources.buildroot.net
+PKG_HASH:=27667e0f2328fdbd79cfd622e4453e5c57e58f781c5da97c9be337d93aa2a02e
 
 PKG_BUILD_DEPENDS:=BUSYBOX_USE_LIBRPC:librpc BUSYBOX_CONFIG_PAM:libpam
 PKG_BUILD_PARALLEL:=1
@@ -27,7 +27,7 @@ PKG_LICENSE_FILES:=LICENSE archival/libarchive/bz/LICENSE
 include $(INCLUDE_DIR)/package.mk
 
 ifeq ($(DUMP),)
-  STAMP_CONFIGURED:=$(strip $(STAMP_CONFIGURED))_$(shell $(SH_FUNC) grep '^CONFIG_BUSYBOX_' $(TOPDIR)/.config | md5s)
+  STAMP_CONFIGURED:=$(strip $(STAMP_CONFIGURED))_$(shell grep '^CONFIG_BUSYBOX_' $(TOPDIR)/.config | mkhash md5)
 endif
 
 ifneq ($(findstring c,$(OPENWRT_VERBOSE)),)
@@ -53,10 +53,10 @@ endef
 define Package/busybox
   SECTION:=base
   CATEGORY:=Base system
-  MAINTAINER:=Felix Fietkau <nbd@openwrt.org>
+  MAINTAINER:=Felix Fietkau <nbd@nbd.name>
   TITLE:=Core utilities for embedded Linux
   URL:=http://busybox.net/
-  DEPENDS:=+BUSYBOX_USE_LIBRPC:librpc +BUSYBOX_CONFIG_PAM:libpam
+  DEPENDS:=+BUSYBOX_USE_LIBRPC:librpc +BUSYBOX_CONFIG_PAM:libpam +BUSYBOX_CONFIG_NTPD:jsonfilter
   MENU:=1
 endef
 
@@ -71,18 +71,11 @@ endef
 
 BUSYBOX_SYM=$(if $(CONFIG_BUSYBOX_CUSTOM),CONFIG,DEFAULT)
 
+# don't create a version string containing the actual timestamp
+export KCONFIG_NOTIMESTAMP=1
+
 define Build/Configure
 	rm -f $(PKG_BUILD_DIR)/.configured*
-	cp ./files/busybox-static.config $(PKG_BUILD_DIR)/.config
-	echo 'CONFIG_STATIC=y' >> $(PKG_BUILD_DIR)/.config
-	yes 'n' | $(MAKE) -C $(PKG_BUILD_DIR) \
-		CC="$(TARGET_CC)" \
-		CROSS_COMPILE="$(TARGET_CROSS)" \
-		KBUILD_HAVE_NLS=no \
-		ARCH="$(ARCH)" \
-		$(BB_MAKE_VERBOSE) \
-		oldconfig
-	mv $(PKG_BUILD_DIR)/.config $(PKG_BUILD_DIR)/.config-static
 	grep 'CONFIG_BUSYBOX_$(BUSYBOX_SYM)' $(TOPDIR)/.config | sed -e "s,\\(# \)\\?CONFIG_BUSYBOX_$(BUSYBOX_SYM)_\\(.*\\),\\1CONFIG_\\2,g" > $(PKG_BUILD_DIR)/.config
 	yes 'n' | $(MAKE) -C $(PKG_BUILD_DIR) \
 		CC="$(TARGET_CC)" \
@@ -91,7 +84,6 @@ define Build/Configure
 		ARCH="$(ARCH)" \
 		$(BB_MAKE_VERBOSE) \
 		oldconfig
-	mv $(PKG_BUILD_DIR)/.config $(PKG_BUILD_DIR)/.config-regular
 endef
 
 LDLIBS:=m crypt
@@ -107,20 +99,13 @@ ifdef CONFIG_BUSYBOX_CONFIG_PAM
   LDLIBS += pam pam_misc pthread
 endif
 
+ifdef CONFIG_BUSYBOX_DEFAULT_NSLOOKUP_LEDE
+  ifeq ($(CONFIG_USE_GLIBC),y)
+	LDLIBS += resolv
+  endif
+endif
+
 define Build/Compile
-	cp $(PKG_BUILD_DIR)/.config-static $(PKG_BUILD_DIR)/.config
-	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) \
-		CC="$(TARGET_CC)" \
-		CROSS_COMPILE="$(TARGET_CROSS)" \
-		KBUILD_HAVE_NLS=no \
-		EXTRA_CFLAGS="$(TARGET_CFLAGS)" \
-		ARCH="$(ARCH)" \
-		SKIP_STRIP=y \
-		LDLIBS="" \
-		$(BB_MAKE_VERBOSE) \
-		all
-	cp $(PKG_BUILD_DIR)/busybox $(PKG_BUILD_DIR)/busybox-static
-	cp $(PKG_BUILD_DIR)/.config-regular $(PKG_BUILD_DIR)/.config
 	+$(MAKE) $(PKG_JOBS) -C $(PKG_BUILD_DIR) \
 		CC="$(TARGET_CC)" \
 		CROSS_COMPILE="$(TARGET_CROSS)" \
@@ -147,17 +132,9 @@ endef
 define Package/busybox/install
 	$(INSTALL_DIR) $(1)/etc/init.d
 	$(CP) $(PKG_INSTALL_DIR)/* $(1)/
-	$(INSTALL_BIN) ./files/telnet $(1)/etc/init.d/telnet
+	$(INSTALL_BIN) ./files/cron $(1)/etc/init.d/cron
 	$(INSTALL_BIN) ./files/sysntpd $(1)/etc/init.d/sysntpd
 	$(INSTALL_BIN) ./files/ntpd-hotplug $(1)/usr/sbin/ntpd-hotplug
-	$(INSTALL_DIR) $(1)/etc/init.d
-	for i in passwd cmp xz unxz xzcat killall free top pgrep wget; do \
-	[ \! -s $(1)/usr/bin/$$$$i ] || ( rm -f $(1)/usr/bin/$$$$i &&	ln -s busybox $(1)/bin/$$$$i ); \
-	done
- ifeq ($(CONFIG_BUSYBOX_CONFIG_UDHCP_INSTALL_SIMPLE_SCRIPT),y)
-	$(INSTALL_DIR) $(1)$(shell dirname $(CONFIG_BUSYBOX_CONFIG_UDHCPC_DEFAULT_SCRIPT))
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/examples/udhcp/simple.script $(1)$(CONFIG_BUSYBOX_CONFIG_UDHCPC_DEFAULT_SCRIPT)
- endif
 	-rm -rf $(1)/lib64
 endef
 

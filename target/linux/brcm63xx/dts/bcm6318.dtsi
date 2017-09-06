@@ -36,7 +36,7 @@
 		compatible = "simple-bus";
 
 		ext_intc: interrupt-controller@10000018 {
-			compatible = "brcm,bcm6345-ext-intc";
+			compatible = "brcm,bcm6318-ext-intc";
 			reg = <0x10000018 0x4>;
 
 			interrupt-controller;
@@ -47,7 +47,7 @@
 		};
 
 		periph_intc: interrupt-controller@10000020 {
-			compatible = "brcm,bcm6345-periph-intc";
+			compatible = "brcm,bcm6345-l1-intc";
 			reg = <0x10000020 0x20>;
 
 			interrupt-controller;

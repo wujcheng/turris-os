@@ -35,6 +35,19 @@ Signed-off-by: Jonas Gorski <jogo@openwrt.org>
   * that would already be defined. */
  
  #define __UAPI_DEF_IF_IFCONF 0
+@@ -85,10 +85,10 @@
+ 
+ #endif /* _NET_IF_H */
+ 
+-/* Coordinate with glibc netinet/in.h header. */
++/* Coordinate with libc netinet/in.h header. */
+ #if defined(_NETINET_IN_H)
+ 
+-/* GLIBC headers included first so don't define anything
++/* LIBC headers included first so don't define anything
+  * that would already be defined. */
+ #define __UAPI_DEF_IN_ADDR		0
+ #define __UAPI_DEF_IN_IPPROTO		0
 @@ -102,7 +102,7 @@
   * if the glibc code didn't define them. This guard matches
   * the guard in glibc/inet/netinet/in.h which defines the

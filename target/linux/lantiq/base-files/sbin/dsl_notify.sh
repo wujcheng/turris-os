@@ -16,30 +16,25 @@
 include /lib/network
 scan_interfaces
 
-local default
 config_load system
-config_get default led_adsl default
-if [ "$default" != 1 ]; then
+config_get led led_dsl sysfs
+if [ -n "$led" ]; then
 	case "$DSL_INTERFACE_STATUS" in
-	  "HANDSHAKE")  led_timer dsl 500 500;;
-	  "TRAINING")   led_timer dsl 200 200;;
-	  "UP")		led_on dsl;;
-	  *)		led_off dsl
+	  "HANDSHAKE")  led_timer $led 500 500;;
+	  "TRAINING")   led_timer $led 200 200;;
+	  "UP")		led_on $led;;
+	  *)		led_off $led
 	esac
 fi
 
-local interfaces=`ubus list network.interface.\* | cut -d"." -f3`
-local ifc
+interfaces=`ubus list network.interface.\* | cut -d"." -f3`
 for ifc in $interfaces; do
 
-	local up
 	json_load "$(ifstatus $ifc)"
 	json_get_var up up
 
-	local auto
 	config_get_bool auto "$ifc" auto 1
 
-	local proto
 	json_get_var proto proto
 
 	if [ "$DSL_INTERFACE_STATUS" = "UP" ]; then

@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2006-2010 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
@@ -13,9 +13,9 @@ PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-s$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:=http://www.skbuff.net/iputils
-PKG_MD5SUM:=a36c25e9ec17e48be514dc0485e7376c
+PKG_HASH:=fd3af46c80ebb99607c2ca1f2a3608b6fe828e25bbec6e54f2afd25f6ddb6ee7
 
-PKG_MAINTAINER:=Jo-Philipp Wich <jow@openwrt.org>
+PKG_MAINTAINER:=Jo-Philipp Wich <jo@mein.io>
 PKG_LICENSE:=GPL-2.0+
 
 PKG_BUILD_DEPENDS:=sysfsutils

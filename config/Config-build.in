@@ -1,10 +1,15 @@
 # Copyright (C) 2006-2013 OpenWrt.org
+# Copyright (C) 2016 LEDE Project
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
 
 menu "Global build settings"
+
+	config ALL_NONSHARED
+		bool "Select all target specific packages by default"
+		default ALL || BUILDBOT
 
 	config ALL_KMODS
 		bool "Select all kernel module packages by default"
@@ -13,6 +18,16 @@ menu "Global build settings"
 	config ALL
 		bool "Select all userspace packages by default"
 		default n
+
+	config BUILDBOT
+		bool "Set build defaults for automatic builds (e.g. via buildbot)"
+		default n
+		help
+		  This option changes several defaults to be more suitable for
+		  automatic builds. This includes the following changes:
+		  - Deleting build directories after compiling (to save space)
+		  - Enabling per-device rootfs support
+		  ...
 
 	config SIGNED_PACKAGES
 		bool "Cryptographically signed package lists"
@@ -59,7 +74,7 @@ menu "Global build settings"
 		bool
 		prompt "Collect kernel debug information"
 		select KERNEL_DEBUG_INFO
-		default n
+		default BUILDBOT
 		help
 		  This collects debugging symbols from the kernel and all compiled modules.
 		  Useful for release builds, so that kernel issues can be debugged offline
@@ -85,65 +100,12 @@ menu "Global build settings"
 		help
 		  Enables IPv6 support in kernel (builtin) and packages.
 
-	config PKG_BUILD_PARALLEL
-		bool
-		prompt "Compile certain packages parallelized"
-		default y
-		help
-		  This adds a -jX option to certain packages that are known to behave well
-		  for parallel build. By default, the package make processes use the main
-		  jobserver, in which case this option only takes effect when you add -jX
-		  to the make command.
-
-		  If you are unsure, select N.
-
-	config PKG_BUILD_USE_JOBSERVER
-		bool
-		prompt "Use top-level make jobserver for packages"
-		depends on PKG_BUILD_PARALLEL
-		default y
-		help
-		  This passes the main make process jobserver fds to package builds,
-		  enabling full parallelization across different packages.
-
-		  Note that disabling this may overcommit CPU resources depending on the
-		  -j level of the main make process, the number of package submake jobs
-		  selected below and the number of actual CPUs present.
-		  Example: If the main make is passed a -j4 and the submake -j
-		  is also set to 4, we may end up with 16 parallel make processes
-		  in the worst case.
-
-	config PKG_BUILD_JOBS
-		int
-		prompt "Number of package submake jobs (2-512)"
-		range 2 512
-		default 2
-		depends on PKG_BUILD_PARALLEL && !PKG_BUILD_USE_JOBSERVER
-		help
-		  The number of jobs (-jX) to pass to packages submake.
-
-	config PKG_DEFAULT_PARALLEL
-		bool
-		prompt "Parallelize the default package build rule (May break build)"
-		depends on PKG_BUILD_PARALLEL
-		depends on BROKEN
-		default n
-		help
-		  Always set the default package build rules to parallel build.
-
-		  WARNING: This may break build or kill your cat, as it builds packages
-		  with multiple jobs that are probably not tested in a parallel build
-		  environment.
-
-		  Only say Y if you don't mind fixing broken packages.  Before reporting
-		  build bugs, set this to N and re-run the build.
-
 	comment "Stripping options"
 
 	choice
 		prompt "Binary stripping method"
 		default USE_STRIP   if EXTERNAL_TOOLCHAIN
-		default USE_STRIP   if USE_GLIBC || USE_MUSL
+		default USE_STRIP   if USE_GLIBC
 		default USE_SSTRIP
 		help
 		  Select the binary stripping method you wish to use.
@@ -152,7 +114,7 @@ menu "Global build settings"
 			bool "none"
 			help
 			  This will install unstripped binaries (useful for native
-		 	  compiling/debugging).
+			  compiling/debugging).
 
 		config USE_STRIP
 			bool "strip"
@@ -162,7 +124,6 @@ menu "Global build settings"
 
 		config USE_SSTRIP
 			bool "sstrip"
-			depends on !DEBUG
 			depends on !USE_GLIBC
 			help
 			  This will install binaries stripped using sstrip.
@@ -211,7 +172,7 @@ menu "Global build settings"
 	config PKG_CHECK_FORMAT_SECURITY
 		bool
 		prompt "Enable gcc format-security"
-		default n
+		default y
 		help
 		  Add -Wformat -Werror=format-security to the CFLAGS.  You can disable
 		  this per package by adding PKG_CHECK_FORMAT_SECURITY:=0 in the package
@@ -219,7 +180,8 @@ menu "Global build settings"
 
 	choice
 		prompt "User space Stack-Smashing Protection"
-		default PKG_CC_STACKPROTECTOR_NONE
+		depends on USE_MUSL
+		default PKG_CC_STACKPROTECTOR_REGULAR
 		help
 		  Enable GCC Stack Smashing Protection (SSP) for userspace applications
 		config PKG_CC_STACKPROTECTOR_NONE
@@ -231,13 +193,14 @@ menu "Global build settings"
 		config PKG_CC_STACKPROTECTOR_STRONG
 			bool "Strong"
 			select SSP_SUPPORT if !USE_MUSL
-			depends on GCC_VERSION_4_9_LINARO
+			depends on !GCC_VERSION_4_8
 			depends on KERNEL_CC_STACKPROTECTOR_STRONG
 	endchoice
 
 	choice
 		prompt "Kernel space Stack-Smashing Protection"
-		default KERNEL_CC_STACKPROTECTOR_NONE
+		default KERNEL_CC_STACKPROTECTOR_REGULAR
+		depends on USE_MUSL || !(x86_64 || i386)
 		help
 		  Enable GCC Stack-Smashing Protection (SSP) for the kernel
 		config KERNEL_CC_STACKPROTECTOR_NONE
@@ -245,12 +208,13 @@ menu "Global build settings"
 		config KERNEL_CC_STACKPROTECTOR_REGULAR
 			bool "Regular"
 		config KERNEL_CC_STACKPROTECTOR_STRONG
-			depends on GCC_VERSION_4_9_LINARO
+			depends on !GCC_VERSION_4_8
 			bool "Strong"
 	endchoice
 
 	choice
 		prompt "Enable buffer-overflows detection (FORTIFY_SOURCE)"
+		default PKG_FORTIFY_SOURCE_1
 		help
 		  Enable the _FORTIFY_SOURCE macro which introduces additional
 		  checks to detect buffer-overflows in the following standard library
@@ -270,6 +234,7 @@ menu "Global build settings"
 
 	choice
 		prompt "Enable RELRO protection"
+		default PKG_RELRO_FULL
 		help
 		  Enable a link-time protection known as RELRO (Relocation Read Only)
 		  which helps to protect from certain type of exploitation techniques

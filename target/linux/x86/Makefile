@@ -9,15 +9,17 @@ include $(TOPDIR)/rules.mk
 ARCH:=i386
 BOARD:=x86
 BOARDNAME:=x86
-FEATURES:=squashfs ext4 vdi vmdk pcmcia targz
-SUBTARGETS=generic xen_domu ep80579 geode kvm_guest rdc 64
-MAINTAINER:=Felix Fietkau <nbd@openwrt.org>
+FEATURES:=squashfs ext4 vdi vmdk pcmcia targz fpu
+SUBTARGETS:=generic legacy geode 64
+MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 
-KERNEL_PATCHVER:=3.18
+KERNEL_PATCHVER:=4.4
 
 KERNELNAME:=bzImage
 
 include $(INCLUDE_DIR)/target.mk
+
+DEFAULT_PACKAGES += partx-utils mkf2fs e2fsprogs
 
 $(eval $(call BuildTarget))
 

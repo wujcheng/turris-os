@@ -13,101 +13,125 @@ ramips_board_detect() {
 	machine=$(awk 'BEGIN{FS="[ \t]+:[ \t]"} /machine/ {print $2}' /proc/cpuinfo)
 
 	case "$machine" in
-	*"7Links PX-4885")
-		name="px4885"
+	*"11AC NAS Router")
+		name="11acnas"
 		;;
-	*"8devices Carambola")
-		name="carambola"
+	*"3G150B")
+		name="3g150b"
 		;;
-	*"Edimax 3g-6200n")
+	*"3G300M")
+		name="3g300m"
+		;;
+	*"3g-6200n")
 		name="3g-6200n"
 		;;
-	*"Edimax 3g-6200nl")
+	*"3g-6200nl")
 		name="3g-6200nl"
 		;;
 	*"A5-V11")
 		name="a5-v11"
 		;;
-	*"Aigale Ai-BR100")
+	*"Ai-BR100")
 		name="ai-br100"
 		;;
-	*"Airlink101 AR670W")
-		name="ar670w"
-		;;
-	*"Airlink101 AR725W")
-		name="ar725w"
-		;;
-	*"AirLive Air3GII")
+	*"Air3GII")
 		name="air3gii"
 		;;
-	*"Edimax BR-6425")
-		name="br6425"
-		;;
-	*"Allnet ALL0239-3G")
+	*"ALL0239-3G")
 		name="all0239-3g"
 		;;
-	*"Allnet ALL0256N")
-		name="all0256n"
+	*"ALL0256N (4M)")
+		name="all0256n-4M"
 		;;
-	*"Allnet ALL5002")
+	*"ALL0256N (8M)")
+		name="all0256n-8M"
+		;;
+	*"ALL5002")
 		name="all5002"
 		;;
-	*"Allnet ALL5003")
+	*"ALL5003")
 		name="all5003"
 		;;
-	*"ARC FreeStation5")
-		name="freestation5"
+	*"AR670W")
+		name="ar670w"
 		;;
-	*"Archer C20i")
-		name="c20i"
+	*"AR725W")
+		name="ar725w"
 		;;
-	*"Argus ATP-52B")
-		name="argus-atp52b"
+	*"ASL26555 (8M)")
+		name="asl26555-8M"
 		;;
-	*"AsiaRF AWM002 EVB")
-		name="awm002-evb"
+	*"ASL26555 (16M)")
+		name="asl26555-16M"
 		;;
-	*"AsiaRF AWM003 EVB")
-		name="awm003-evb"
+	*"ATP-52B")
+		name="atp-52b"
 		;;
-	*"AsiaRF AWAPN2403")
+	*"AWAPN2403")
 		name="awapn2403"
 		;;
-	*"Asus WL-330N")
-		name="wl-330n"
+	*"AWM002 EVB (4M)")
+		name="awm002-evb-4M"
 		;;
-	*"Asus WL-330N3G")
-		name="wl-330n3g"
+	*"AWM002 EVB (8M)")
+		name="awm002-evb-8M"
 		;;
-	*"Alpha ASL26555")
-		name="asl26555"
+	*"AWM003 EVB")
+		name="awm003-evb"
 		;;
-	*"Aztech HW550-3G")
-		name="hw550-3g"
+	*"BC2")
+		name="bc2"
 		;;
-	*"AXIMCom MR-102N")
-		name="mr-102n"
+	*"BR-6425")
+		name="br-6425"
 		;;
-	*"Buffalo WSR-600DHP")
-		name="wsr-600"
+	*"BR-6475nD")
+		name="br-6475nd"
 		;;
-	*"Buffalo WSR-1166DHP")
-		name="wsr-1166"
+	*"Broadway")
+		name="broadway"
 		;;
-	*"Comfast CF-WR800N")
+	*"C20i")
+		name="c20i"
+		;;
+	*"C50")
+		name="c50"
+		;;
+	*"Carambola")
+		name="carambola"
+		;;
+	*"CF-WR800N")
 		name="cf-wr800n"
 		;;
-	*"Firefly FireWRT")
-		name="firewrt"
+	*"CS-QR10")
+		name="cs-qr10"
 		;;
 	*"CY-SWR1100")
 		name="cy-swr1100"
+		;;
+	*"D105")
+		name="d105"
+		;;
+	*"D240")
+		name="d240"
+		;;
+	*"DAP-1350")
+		name="dap-1350"
+		;;
+	*"DB-WRT01")
+		name="db-wrt01"
+		;;
+	*"DCH-M225")
+		name="dch-m225"
 		;;
 	*"DCS-930")
 		name="dcs-930"
 		;;
 	*"DCS-930L B1")
 		name="dcs-930l-b1"
+		;;
+	*"Digineo AC1200 Pro")
+		name="ac1200pro"
 		;;
 	*"DIR-300 B1")
 		name="dir-300-b1"
@@ -121,23 +145,20 @@ ramips_board_detect() {
 	*"DIR-600 B1")
 		name="dir-600-b1"
 		;;
-	*"DIR-600 B2")
-		name="dir-600-b2"
-		;;
 	*"DIR-610 A1")
 		name="dir-610-a1"
+		;;
+	*"DIR-615 D")
+		name="dir-615-d"
+		;;
+	*"DIR-615 H1")
+		name="dir-615-h1"
 		;;
 	*"DIR-620 A1")
 		name="dir-620-a1"
 		;;
 	*"DIR-620 D1")
 		name="dir-620-d1"
-		;;
-	*"DIR-615 H1")
-		name="dir-615-h1"
-		;;
-	*"DIR-615 D")
-		name="dir-615-d"
 		;;
 	*"DIR-645")
 		name="dir-645"
@@ -148,20 +169,23 @@ ramips_board_detect() {
 	*"DIR-860L B1")
 		name="dir-860l-b1"
 		;;
-	*"DAP-1350")
-		name="dap-1350"
+	*"Dovado Tiny AC")
+		name="tiny-ac"
+		;;
+	*"DuZun DM06")
+		name="duzun-dm06"
+		;;
+	*"DWR-512 B")
+		name="dwr-512-b"
+		;;
+	*"E1700")
+		name="e1700"
 		;;
 	*"ESR-9753")
 		name="esr-9753"
 		;;
-	*"EASYACC WI-STOR WIZARD 8800")
-		name="wizard8800"
-		;;
-	*"Edimax BR-6475nD")
-		name="br-6475nd"
-		;;
-	*"F7C027")
-		name="f7c027"
+	*"EX2700")
+		name="ex2700";
 		;;
 	*"F5D8235 v1")
 		name="f5d8235-v1"
@@ -169,128 +193,245 @@ ramips_board_detect() {
 	*"F5D8235 v2")
 		name="f5d8235-v2"
 		;;
-	*"Hauppauge Broadway")
-		name="broadway"
+	*"F7C027")
+		name="f7c027"
 		;;
-	*"Huawei D105")
-		name="d105"
+	*"FireWRT")
+		name="firewrt"
 		;;
-	*"La Fonera 2.0N")
+	*"Fonera 2.0N")
 		name="fonera20n"
 		;;
-	*"Asus RT-N14U")
-		name="rt-n14u"
+	*"FreeStation5")
+		name="freestation5"
 		;;
-	*"Asus RT-N13U")
-		name="rt-n13u"
+	*"GL-MT300A")
+		name="gl-mt300a"
 		;;
-	*"MoFi Network MOFI3500-3GN")
-		name="mofi3500-3gn"
+	*"GL-MT300N")
+		name="gl-mt300n"
 		;;
-	*"HILINK HLK-RM04")
+	*"GL-MT750")
+		name="gl-mt750"
+		;;
+	*"HC5661")
+		name="hc5661"
+		;;
+	*"HC5761")
+		name="hc5761"
+		;;
+	*"HC5861")
+		name="hc5861"
+		;;
+	*"HG255D")
+		name="hg255d"
+		;;
+	*"HLK-RM04")
 		name="hlk-rm04"
 		;;
-	*"HooToo HT-TM02")
+	*"HPM")
+		name="hpm"
+		;;
+	*"HT-TM02")
 		name="ht-tm02"
 		;;
-	*"HAME MPR-A1")
- 		name="mpr-a1"
- 		;;
-	*"HAME MPR-A2")
- 		name="mpr-a2"
- 		;;
-	*"Kingston MLW221")
+	*"HW550-3G")
+		name="hw550-3g"
+		;;
+	*"IP2202")
+		name="ip2202"
+		;;
+	*"JHR-N805R")
+		name="jhr-n805r"
+		;;
+	*"JHR-N825R")
+		name="jhr-n825r"
+		;;
+	*"JHR-N926R")
+		name="jhr-n926r"
+		;;
+	*"M3")
+		name="m3"
+		;;
+	*"M4 (4M)")
+		name="m4-4M"
+		;;
+	*"M4 (8M)")
+		name="m4-8M"
+		;;
+	*"MediaTek LinkIt Smart 7688")
+		linkit="$(dd bs=1 skip=1024 count=12 if=/dev/mtd2 2> /dev/null)"
+		if [ "${linkit}" = "LINKITS7688D" ]; then
+			name="linkits7688d"
+			RAMIPS_MODEL="${machine} DUO"
+		else
+			name="linkits7688"
+		fi
+		;;
+	*"Memory 2 Move")
+		name="m2m"
+		;;
+	*"Mercury MAC1200R v2")
+		name="mac1200r-v2"
+		;;
+	*"MicroWRT")
+		name="microwrt"
+		;;
+	*"MiniEMBPlug")
+		name="miniembplug"
+		;;
+	*"MiniEMBWiFi")
+		name="miniembwifi"
+		;;
+	*"MiWiFi Mini")
+		name="miwifi-mini"
+		;;
+	*"MiWiFi Nano")
+		name="miwifi-nano"
+		;;
+	*"MLW221")
 		name="mlw221"
 		;;
-	*"Kingston MLWG2")
+	*"MLWG2")
 		name="mlwg2"
 		;;
-	*"Linksys E1700")
-		name="e1700"
+	*"MOFI3500-3GN")
+		name="mofi3500-3gn"
 		;;
-	*"Linksys RE6500")
-		name="re6500"
+	*"MPR-A1")
+		name="mpr-a1"
 		;;
-	*"Planex MZK-750DHP")
+	*"MPR-A2")
+		name="mpr-a2"
+		;;
+	*"MR-102N")
+		name="mr-102n"
+		;;
+	*"MR200")
+		name="mr200"
+		;;
+	*"MT7620a + MT7530 evaluation"*)
+		name="mt7620a_mt7530"
+		;;
+	*"MT7620a V22SG"*)
+		name="mt7620a_v22sg"
+		;;
+	*"MT7621 evaluation"*)
+		name="mt7621"
+		;;
+	*"MT7628AN evaluation"*)
+		name="mt7628"
+		;;
+	*"MT7688 evaluation"*)
+		name="mt7688"
+		;;
+	*"MZK-750DHP")
 		name="mzk-750dhp"
 		;;
-	*"Microduino MicroWRT")
-		name="microwrt"
+	*"MZK-DP150N")
+		name="mzk-dp150n"
+		;;
+	*"MZK-EX300NP")
+		name="mzk-ex300np"
+		;;
+	*"MZK-EX750NP")
+		name="mzk-ex750np"
+		;;
+	*"MZK-W300NH2"*)
+		name="mzk-w300nh2"
+		;;
+	*"MZK-WDPR"*)
+		name="mzk-wdpr"
+		;;
+	*"NA930")
+		name="na930"
 		;;
 	*"NBG-419N")
 		name="nbg-419n"
 		;;
-	*"Netgear WNCE2001")
-		name="wnce2001"
+	*"NBG-419N v2")
+		name="nbg-419n2"
 		;;
-	*"NexAira BC2")
-		name="bc2"
+	*"Newifi-D1")
+		name="newifi-d1"
 		;;
-	*"Nexx WT1520")
-		name="wt1520"
+	*"NCS601W")
+		name="ncs601w"
 		;;
-	*"Nexx WT3020")
-		name="wt3020"
+	*"NixcoreX1 (8M)")
+		name="nixcore-x1-8M"
+		;;
+	*"NixcoreX1 (16M)")
+		name="nixcore-x1-16M"
 		;;
 	*"NW718")
 		name="nw718"
 		;;
-	*"Intenso Memory 2 Move")
-		name="m2m"
+	*"Onion Omega2")
+		name="omega2"
 		;;
-	*"Omnima EMB HPM")
-		name="omni-emb-hpm"
+	*"Onion Omega2+")
+		name="omega2p"
 		;;
-	*"Omnima MiniEMBWiFi")
-		name="omni-emb"
+	*"OY-0001")
+		name="oy-0001"
 		;;
-	*"Omnima MiniPlug")
-		name="omni-plug"
-		;;
-	*"OLinuXino-RT5350F")
-		name="olinuxino-rt5350f"
-		;;
-	*"OLinuXino-RT5350F-EVB")
-		name="olinuxino-rt5350f-evb"
+	*"PBR-D1")
+		name="pbr-d1"
 		;;
 	*"PBR-M1")
 		name="pbr-m1"
 		;;
-	*"Petatel PSR-680W"*)
+	*"PSG1208")
+		name="psg1208"
+		;;
+	*"PSG1218")
+		name="psg1218"
+		;;
+	*"PSR-680W"*)
 		name="psr-680w"
-		;;
-	*"Planex MZK-W300NH2"*)
-		name="mzk-w300nh2"
-		;;
-	*"Poray IP2202")
-		name="ip2202"
-		;;
-	*"Poray M3")
-		name="m3"
-		;;
-	*"Poray M4")
-		name="m4"
-		;;
-	*"Poray X5")
-		name="x5"
-		;;
-	*"Poray X8")
-		name="x8"
 		;;
 	*"PWH2004")
 		name="pwh2004"
 		;;
-	*"Asus RP-N53")
+	*"PX-4885 (4M)")
+		name="px-4885-4M"
+		;;
+	*"PX-4885 (8M)")
+		name="px-4885-8M"
+		;;
+	*"Q7")
+		name="zte-q7"
+		;;
+	*"RB750Gr3")
+		name="rb750gr3"
+		;;
+	*"RE6500")
+		name="re6500"
+		;;
+	*"RN502J")
+		name="xdxrn502j"
+		;;
+	*"RP-N53")
 		name="rp-n53"
 		;;
-	*"Ralink MT7620a + MT7530 evaluation board")
-		name="mt7620a_mt7530"
+	*"RT5350F-OLinuXino")
+		name="rt5350f-olinuxino"
+		;;
+	*"RT5350F-OLinuXino-EVB")
+		name="rt5350f-olinuxino-evb"
 		;;
 	*"RT-G32 B1")
 		name="rt-g32-b1"
 		;;
 	*"RT-N10+")
 		name="rt-n10-plus"
+		;;
+	*"RT-N13U")
+		name="rt-n13u"
+		;;
+	*"RT-N14U")
+		name="rt-n14u"
 		;;
 	*"RT-N15")
 		name="rt-n15"
@@ -301,53 +442,14 @@ ramips_board_detect() {
 	*"RUT5XX")
 		name="rut5xx"
 		;;
-	*"Skyline SL-R7205"*)
+	*"SamKnows Whitebox 8")
+		name="sk-wb8"
+		;;
+	*"SAP-G3200U3")
+		name="sap-g3200u3"
+		;;
+	*"SL-R7205"*)
 		name="sl-r7205"
-		;;
-	*"Sparklan WCR-150GN")
-		name="wcr-150gn"
-		;;
-	*"V22RW-2X2")
-		name="v22rw-2x2"
-		;;
-	*"VoCore")
-		name="vocore"
-		;;
-	*"W502U")
-		name="w502u"
-		;;
-	*"WMR-300")
-		name="wmr300"
-		;;
-	*"WHR-300HP2")
-		name="whr-300hp2"
-		;;
-	*"WHR-600D")
-		name="whr-600d"
-		;;
-	*"WHR-1166D")
-		name="whr-1166d"
-		;;
-	*"WHR-G300N")
-		name="whr-g300n"
-		;;
-	*"Sitecom WL-341 v3")
-		name="wl341v3"
-		;;
-	*"Sitecom WL-351 v1 002")
-		name="wl-351"
-		;;
-	*"Tenda 3G300M")
-		name="3g300m"
-		;;
-	*"Tenda 3G150B")
-		name="3g150b"
-		;;
-	*"Tenda W306R V2.0")
-		name="w306r-v20"
-		;;
-	*"Tenda W150M")
-		name="w150m"
 		;;
 	*"TEW-691GR")
 		name="tew-691gr"
@@ -355,68 +457,200 @@ ramips_board_detect() {
 	*"TEW-692GR")
 		name="tew-692gr"
 		;;
-	*"Ralink V11ST-FE")
+	*"TEW-714TRU")
+		name="tew-714tru"
+		;;
+	*"Timecloud")
+		name="timecloud"
+		;;
+	*"UBNT-ERX")
+		name="ubnt-erx"
+		;;
+	*"UR-326N4G")
+		name="ur-326n4g"
+		;;
+	*"UR-336UN")
+		name="ur-336un"
+		;;
+	*"V11ST-FE")
 		name="v11st-fe"
+		;;
+	*"V22RW-2X2")
+		name="v22rw-2x2"
+		;;
+	*"VoCore (8M)")
+		name="vocore-8M"
+		;;
+	*"VoCore (16M)")
+		name="vocore-16M"
+		;;
+	*"VoCore2")
+		name="vocore2"
+		;;
+	*"VR500")
+		name="vr500"
+		;;
+	*"W150M")
+		name="w150m"
+		;;
+	*"W2914NS v2")
+		name="w2914nsv2"
+		;;
+	*"W306R V2.0")
+		name="w306r-v20"
+		;;
+	*"W502U")
+		name="w502u"
+		;;
+	*"WCR-150GN")
+		name="wcr-150gn"
+		;;
+	*"WF-2881")
+		name="wf-2881"
+		;;
+	*"WHR-1166D")
+		name="whr-1166d"
+		;;
+	*"WHR-300HP2")
+		name="whr-300hp2"
+		;;
+	*"WHR-600D")
+		name="whr-600d"
+		;;
+	*"WHR-G300N")
+		name="whr-g300n"
+		;;
+	*"Widora-NEO")
+		name="widora-neo"
+		;;
+	*"WiTi")
+                name="witi"
+		;;
+	*"WIZARD 8800")
+		name="wizard8800"
+		;;
+	*"WizFi630A")
+		name="wizfi630a"
+		;;
+	*"WL-330N")
+		name="wl-330n"
+		;;
+	*"WL-330N3G")
+		name="wl-330n3g"
+		;;
+	*"WL-341 v3")
+		name="wl-341v3"
+		;;
+	*"WL-351 v1 002")
+		name="wl-351"
+		;;
+	*"WL-WN575A3")
+		name="wl-wn575a3"
 		;;
 	*"WLI-TX4-AG300N")
 		name="wli-tx4-ag300n"
 		;;
-	*"WZR-AGL300NH")
-		name="wzr-agl300nh"
+	*"WLR-6000")
+		name="wlr-6000"
 		;;
-	*"WR512-3GN-like router")
-		name="wr512-3gn"
+	*"WMR-300")
+		name="wmr-300"
 		;;
-	*"UR-326N4G Wireless N router")
-		name="ur-326n4g"
+	*"WN3000RPv3")
+		name="wn3000rpv3"
 		;;
-	*"UR-336UN Wireless N router")
-		name="ur-336un"
+	*"WNCE2001")
+		name="wnce2001"
 		;;
-	*"AWB WR6202")
+	*"WNDR3700v5")
+		name="wndr3700v5"
+		;;
+	*"WR512-3GN (4M)")
+		name="wr512-3gn-4M"
+		;;
+	*"WR512-3GN (8M)")
+		name="wr512-3gn-8M"
+		;;
+	*"WR6202")
 		name="wr6202"
 		;;
-	*"XDX RN502J")
-		name="xdxrn502j"
-		;;
-	*"HG255D")
-		name="hg255d"
-		;;
-	*"V22SG")
-		name="v22sg"
+	*"WRH-300CR")
+		name="wrh-300cr"
 		;;
 	*"WRTNODE")
 		name="wrtnode"
 		;;
-	*"Wansview NCS601W")
-		name="ncs601w"
+	*"WRTnode2R")
+		name="wrtnode2r"
 		;;
-	*"Xiaomi MiWiFi Mini")
-		name="xiaomi-miwifi-mini"
+	*"WRTnode2P")
+		name="wrtnode2p"
 		;;
-	*"Sercomm NA930")
-		name="na930"
+	*"WSR-1166DHP")
+		name="wsr-1166"
 		;;
-	*"Zbtlink ZBT-WA05")
-		name="zbt-wa05"
+	*"WSR-600DHP")
+		name="wsr-600"
 		;;
-	*"ZBT WR8305RT")
-		name="wr8305rt"
+	*"WT1520 (4M)")
+		name="wt1520-4M"
 		;;
-	*"ZTE Q7")
-		name="zte-q7"
+	*"WT1520 (8M)")
+		name="wt1520-8M"
 		;;
-	*"Lenovo Y1")
+	*"WT3020 (4M)")
+		name="wt3020-4M"
+		;;
+	*"WT3020 (8M)")
+		name="wt3020-8M"
+		;;
+	*"WZR-AGL300NH")
+		name="wzr-agl300nh"
+		;;
+	*"X5")
+		name="x5"
+		;;
+	*"X8")
+		name="x8"
+		;;
+	*"Y1")
 		name="y1"
 		;;
-	*"Lenovo Y1S")
+	*"Y1S")
 		name="y1s"
 		;;
-	*"Mediatek MT7621 evaluation board")
-		name="mt7621"
+	*"ZBT-APE522II")
+		name="zbt-ape522ii"
 		;;
-	*"Mediatek MT7628AN evaluation board")
-		name="mt7628"
+	*"ZBT-CPE102")
+		name="zbt-cpe102"
+		;;
+	*"ZBT-WA05")
+		name="zbt-wa05"
+		;;
+	*"ZBT-WE826")
+		name="zbt-we826"
+		;;
+	*"ZBT-WG2626")
+		name="zbt-wg2626"
+		;;
+	*"ZBT-WG3526")
+		name="zbt-wg3526"
+		;;
+	*"ZBT-WR8305RT")
+		name="zbt-wr8305rt"
+		;;
+	*"ZyXEL Keenetic Omni")
+		name="kn_rc"
+		;;
+	*"ZyXEL Keenetic Omni II")
+		name="kn_rf"
+		;;
+	*"ZyXEL Keenetic Viva")
+		name="kng_rc"
+		;;
+	*"YK1")
+		name="youku-yk1"
 		;;
 	*)
 		name="generic"
@@ -438,5 +672,5 @@ ramips_board_name() {
 	[ -f /tmp/sysinfo/board_name ] && name=$(cat /tmp/sysinfo/board_name)
 	[ -z "$name" ] && name="unknown"
 
-	echo "$name"
+	echo "${name%-[0-9]*M}"
 }

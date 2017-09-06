@@ -1,6 +1,6 @@
 --- a/gettext-runtime/man/Makefile.am
 +++ b/gettext-runtime/man/Makefile.am
-@@ -171,8 +171,7 @@ textdomain.3.html: textdomain.3.in
+@@ -172,8 +172,7 @@ textdomain.3.html: textdomain.3.in
  bindtextdomain.3.html: bindtextdomain.3.in
  bind_textdomain_codeset.3.html: bind_textdomain_codeset.3.in
  

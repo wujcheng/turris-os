@@ -16,7 +16,7 @@ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:= \
 	http://mirror2.openwrt.org/sources \
 	ftp://ftp.denx.de/pub/u-boot
-PKG_MD5SUM:=6d2116d1385a66e9a59742caa9d62a54
+PKG_HASH:=7b6444bd23eb61068c43bd1d44ec7e7bfdbce5cadeca20c833eee186b4d3fd31
 
 PKG_BUILD_PARALLEL:=1
 
@@ -26,6 +26,10 @@ define uboot/Default
   TITLE:=
   CONFIG:=
   IMAGE:=
+endef
+
+define uboot/mx6qsabresd
+  TITLE:=U-Boot for SABRE i.MX6Quad board
 endef
 
 define uboot/nitrogen6dl
@@ -65,6 +69,7 @@ define uboot/wandboard_solo
 endef
 
 UBOOTS := \
+	mx6qsabresd \
 	nitrogen6dl \
 	nitrogen6dl2g \
 	nitrogen6q \

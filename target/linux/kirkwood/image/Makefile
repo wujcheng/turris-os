@@ -4,168 +4,92 @@
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
 #
-include $(TOPDIR)/rules.mk
-include $(INCLUDE_DIR)/image.mk
 
 NAND_BLOCKSIZE := 2048-128k
 
-define sanitize_profile_name
-$(shell echo $(PROFILE) | tr '[:upper:]' '[:lower:]')
+include $(TOPDIR)/rules.mk
+include $(INCLUDE_DIR)/image.mk
+
+KERNEL_LOADADDR:=0x8000
+TARGET_DEVICES = linksys-audi linksys-viper dockstar goflexnet goflexhome iconnect pogo_e02 ib62x0
+
+UBI_OPTS := -m 2048 -p 128KiB -s 512
+UBIFS_OPTS := -m 2048 -e 126KiB -c 4096
+
+define Device/Default
+  PROFILES := Default
+  KERNEL_DEPENDS = $$(wildcard $(DTS_DIR)/$$(DEVICE_DTS).dts)
+  KERNEL := kernel-bin | append-dtb | uImage none
+  KERNEL_NAME := zImage
+  KERNEL_SUFFIX  := -uImage
+  KERNEL_INSTALL := 1
+
+  PAGESIZE := 2048
+  SUBPAGESIZE := 512
+  BLOCKSIZE := 128k
+  IMAGES := sysupgrade.tar
+  IMAGE/sysupgrade.tar := sysupgrade-tar
 endef
 
-define Image/BuildKernel/Template
-
-	$(CP) $(KDIR)/zImage $(BIN_DIR)/$(IMG_PREFIX)-zImage
-	echo -ne '\x00\x00\x00\x00' >> $(BIN_DIR)/$(IMG_PREFIX)-zImage
-	$(call Image/BuildKernel/MkuImage, \
-		none, 0x8000, 0x8000, \
-		$(BIN_DIR)/$(IMG_PREFIX)-zImage, \
-		$(BIN_DIR)/$(IMG_PREFIX)-uImage \
-	)
-
- ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
-	$(CP) $(KDIR)/zImage-initramfs $(BIN_DIR)/$(IMG_PREFIX)-zImage-initramfs
-	echo -ne '\x00\x00\x00\x00' >> $(BIN_DIR)/$(IMG_PREFIX)-zImage-initramfs
-	$(call Image/BuildKernel/MkuImage, \
-		none, 0x8000, 0x8000, \
-		$(BIN_DIR)/$(IMG_PREFIX)-zImage-initramfs, \
-		$(BIN_DIR)/$(IMG_PREFIX)-uImage-initramfs \
-	)
- endif
-
- ifneq ($(1),)
-	$(CP) $(DTS_DIR)/kirkwood-$(1).dtb $(BIN_DIR)/$(IMG_PREFIX)-$(1).dtb
-
-	$(CP) $(KDIR)/zImage $(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-zImage
-	cat $(BIN_DIR)/$(IMG_PREFIX)-$(1).dtb >> $(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-zImage
-	$(call Image/BuildKernel/MkuImage, \
-		none, 0x8000, 0x8000, \
-		$(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-zImage, \
-		$(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-uImage \
-	)
-
-  ifneq ($(CONFIG_TARGET_ROOTFS_INITRAMFS),)
-	$(CP) $(KDIR)/zImage-initramfs $(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-zImage-initramfs
-	cat $(BIN_DIR)/$(IMG_PREFIX)-$(1).dtb >> $(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-zImage-initramfs
-	$(call Image/BuildKernel/MkuImage, \
-		none, 0x8000, 0x8000, \
-		$(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-zImage-initramfs, \
-		$(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-uImage-initramfs \
-	)
-  endif
- endif
+define Device/dockstar
+  DEVICE_DTS := kirkwood-dockstar
+  FILESYSTEMS := squashfs
+  DEVICE_TITLE := Seagate FreeAgent Dockstar
+  IMAGES += factory.bin
+  IMAGE/factory.bin := append-ubi
+  KERNEL_IN_UBI := 1
 endef
 
-define Image/InstallKernel/Template
-
- ifneq ($(CONFIG_TARGET_ROOTFS_INCLUDE_KERNEL),)
-	$(INSTALL_DIR) $(TARGET_DIR)/boot
-   ifneq ($(CONFIG_TARGET_ROOTFS_INCLUDE_UIMAGE),)
-	$(CP) $(BIN_DIR)/$(IMG_PREFIX)-uImage $(TARGET_DIR)/boot/
-	ln -sf $(IMG_PREFIX)-uImage $(TARGET_DIR)/boot/uImage
-   endif
-   ifneq ($(CONFIG_TARGET_ROOTFS_INCLUDE_ZIMAGE),)
-	$(CP) $(BIN_DIR)/$(IMG_PREFIX)-zImage $(TARGET_DIR)/boot/
-	ln -sf $(IMG_PREFIX)-zImage $(TARGET_DIR)/boot/zImage
-   endif
- endif
-
- ifneq ($(CONFIG_TARGET_ROOTFS_INCLUDE_DTB),)
-	$(INSTALL_DIR) $(TARGET_DIR)/boot
-  ifneq ($(1),)
-	$(CP) $(BIN_DIR)/$(IMG_PREFIX)-$(1).dtb $(TARGET_DIR)/boot/
-	ln -sf $(IMG_PREFIX)-$(1).dtb $(TARGET_DIR)/boot/$(1).dtb
-  endif
- endif
+define Device/goflexnet
+$(Device/dockstar)
+  DEVICE_TITLE := Seagate GoFlexNet
+  DEVICE_DTS := kirkwood-goflexnet
 endef
 
-define Image/Build/jffs2-nand-2048-128k
-	dd if=$(KDIR)/root.$(1) of=$(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-$(1).img \
-		bs=2048 conv=sync
+define Device/goflexhome
+$(Device/dockstar)
+  DEVICE_TITLE := Seagate GoFlexHome
+  DEVICE_DTS := kirkwood-goflexhome
 endef
 
-define Image/Build/squashfs
-	$(call prepare_generic_squashfs,$(KDIR)/root.squashfs)
-	( \
-		dd if=$(KDIR)/zImage bs=4096k conv=sync; \
-		dd if=$(KDIR)/root.$(1) bs=128k conv=sync; \
-	) > $(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-$(1).img
+define Device/linksys-audi
+  DEVICE_TITLE := Linksys EA3500 (Audi)
+  DEVICE_PACKAGES := kmod-mwl8k swconfig wpad-mini
+  DEVICE_DTS := kirkwood-linksys-audi
+  KERNEL_SIZE := 2624k
+  FILESYSTEMS := squashfs
+  IMAGES += factory.bin
+  UBINIZE_OPTS := -E 5
+  IMAGE/factory.bin := append-kernel | pad-to $$$$(KERNEL_SIZE) | append-ubi
 endef
 
-define Image/mkfs/targz
-
-	$(TAR) -czpf $(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-rootfs.tar.gz --numeric-owner --owner=0 --group=0 -C $(TARGET_DIR)/ .
+define Device/linksys-viper
+  DEVICE_TITLE := Linksys E4200v2 / EA4500 (Viper)
+  DEVICE_PACKAGES := kmod-mwl8k swconfig wpad-mini
+  DEVICE_DTS := kirkwood-linksys-viper
+  KERNEL_SIZE := 2688k
+  FILESYSTEMS := squashfs
+  IMAGES += factory.bin
+  UBINIZE_OPTS := -E 5
+  IMAGE/factory.bin := append-kernel | pad-to $$$$(KERNEL_SIZE) | append-ubi
 endef
 
-define Image/Build/ubifs
-
- ifneq ($($(PROFILE)_UBIFS_OPTS),)
-	$(CP) $(KDIR)/root.ubifs $(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-rootfs.ubifs
- endif
+define Device/iconnect
+$(Device/dockstar)
+  DEVICE_TITLE := Iomega Iconnect
+  DEVICE_DTS := kirkwood-iconnect
 endef
 
-define Image/Build/ubi
-
- ifneq ($($(PROFILE)_UBI_OPTS),)
-	$(CP) $(KDIR)/root.ubi $(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-rootfs.ubi
- endif
+define Device/pogo_e02
+$(Device/dockstar)
+  DEVICE_TITLE := Cloud Engines Pogoplug E02
+  DEVICE_DTS := kirkwood-pogo_e02
 endef
 
-Image/BuildKernel/Template/Generic=$(call Image/BuildKernel/Template)
-Image/InstallKernel/Template/Generic=$(call Image/InstallKernel/Template)
-
-Image/BuildKernel/Template/DOCKSTAR=$(call Image/BuildKernel/Template,dockstar)
-Image/InstallKernel/Template/DOCKSTAR=$(call Image/InstallKernel/Template,dockstar)
-
-Image/BuildKernel/Template/EA3500=$(call Image/BuildKernel/Template,ea3500)
-Image/InstallKernel/Template/EA3500=$(call Image/InstallKernel/Template,ea3500)
-
-Image/BuildKernel/Template/EA4500=$(call Image/BuildKernel/Template,ea4500)
-Image/InstallKernel/Template/EA4500=$(call Image/InstallKernel/Template,ea4500)
-
-Image/BuildKernel/Template/GOFLEXHOME=$(call Image/BuildKernel/Template,goflexhome)
-Image/InstallKernel/Template/GOFLEXHOME=$(call Image/InstallKernel/Template,goflexhome)
-
-Image/BuildKernel/Template/GOFLEXNET=$(call Image/BuildKernel/Template,goflexnet)
-Image/InstallKernel/Template/GOFLEXNET=$(call Image/InstallKernel/Template,goflexnet)
-
-Image/BuildKernel/Template/IB62X0=$(call Image/BuildKernel/Template,ib62x0)
-Image/InstallKernel/Template/IB62X0=$(call Image/InstallKernel/Template,ib62x0)
-
-Image/BuildKernel/Template/ICONNECT=$(call Image/BuildKernel/Template,iconnect)
-Image/InstallKernel/Template/ICONNECT=$(call Image/InstallKernel/Template,iconnect)
-
-Image/BuildKernel/Template/IOMEGA_IX2_200=$(call Image/BuildKernel/Template,iomega_ix2_200)
-Image/InstallKernel/Template/IOMEGA_IX2_200=$(call Image/InstallKernel/Template,iomega_ix2_200)
-
-Image/BuildKernel/Template/POGOE02=$(call Image/BuildKernel/Template,pogo_e02)
-Image/InstallKernel/Template/POGOE02=$(call Image/InstallKernel/Template,pogo_e02)
-
-Image/BuildKernel/Template/SHEEVAPLUG=$(call Image/BuildKernel/Template,sheevaplug)
-Image/InstallKernel/Template/SHEEVAPLUG=$(call Image/InstallKernel/Template,sheevaplug)
-
-Image/BuildKernel/Template/SHEEVAPLUGSATA=$(call Image/BuildKernel/Template,sheevaplug-esata)
-Image/InstallKernel/Template/SHEEVAPLUGSATA=$(call Image/InstallKernel/Template,sheevaplug-esata)
-
-Image/BuildKernel/Template/GuruplugServerPlus=$(call Image/BuildKernel/Template,guruplug-server-plus)
-Image/InstallKernel/Template/GuruplugServerPlus=$(call Image/InstallKernel/Template,guruplug-server-plus)
-
-Image/BuildKernel/Template/Topkick1281P2=$(call Image/BuildKernel/Template,topkick)
-Image/InstallKernel/Template/Topkick1281P2=$(call Image/InstallKernel/Template,topkick)
-
-define Image/BuildKernel
-	$(call Image/BuildKernel/Template/$(PROFILE))
-endef
-
-define Image/InstallKernel
-	$(call Image/InstallKernel/Template/$(PROFILE))
-endef
-
-define Image/Build
-	$(if $(Image/Build/$(1)), \
-		$(call Image/Build/$(1),$(1)), \
-		$(CP) $(KDIR)/root.$(1) $(BIN_DIR)/$(IMG_PREFIX)-$(call sanitize_profile_name)-$(1).img \
-	)
+define Device/ib62x0
+$(Device/dockstar)
+  DEVICE_TITLE := RaidSonic ICY BOX IB-NAS62x0
+  DEVICE_DTS := kirkwood-ib62x0
 endef
 
 $(eval $(call BuildImage))

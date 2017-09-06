@@ -1,6 +1,5 @@
 #
 # Copyright (C) 2006-2015 OpenWrt.org
-# Copyright (C) 2016 CZ.NIC
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -9,12 +8,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=iproute2
-PKG_VERSION:=4.0.0
-PKG_RELEASE:=4
+PKG_VERSION:=4.4.0
+PKG_RELEASE:=9
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
-PKG_SOURCE_URL:=http://kernel.org/pub/linux/utils/net/iproute2/
-PKG_MD5SUM:=3adc263ade4ee76c35032e8f50b54108
+PKG_SOURCE_URL:=@KERNEL/linux/utils/net/iproute2
+PKG_HASH:=bc91c367288a19f78ef800cd6840363be1f22da8436fbae88e1a7250490d6514
 PKG_BUILD_PARALLEL:=1
 PKG_LICENSE:=GPL-2.0
 
@@ -31,22 +30,15 @@ define Package/iproute2/Default
   MAINTAINER:=Russell Senior <russell@personaltelco.net>
   DEPENDS:= +libnl-tiny
   VARIANT:=$(1)
+  PROVIDES:=$(3)
 endef
 
-define Package/ip
-$(call Package/iproute2/Default,tiny,Also full)
+define Package/ip-tiny
+$(call Package/iproute2/Default,tiny,Minimal,ip)
   CONFLICTS:=ip-full
 endef
 
-Package/ip-full=$(call Package/iproute2/Default,full,Full)
-
-define Package/ip/conffiles
-/etc/iproute2/rt_tables
-endef
-
-define Package/ip-$(BUILD_VARIANT)/conffiles
-$(Package/ip/conffiles)
-endef
+Package/ip-full:=$(call Package/iproute2/Default,full,Full,ip)
 
 define Package/tc
 $(call Package/iproute2/Default)
@@ -69,12 +61,14 @@ $(call Package/iproute2/Default)
   TITLE:=Socket statistics utility
 endef
 
-# We want a full-featured ip command on turris routers. But attempts to
-# use ip-full fail miserably, because just everything out there depends
-# on ip. So we make ip mean the same as ip-full.
-#ifeq ($(BUILD_VARIANT),tiny)
-#  IP_CONFIG_TINY:=y
-#endif
+define Package/nstat
+$(call Package/iproute2/Default)
+  TITLE:=Network statistics utility
+endef
+
+ifeq ($(BUILD_VARIANT),tiny)
+  IP_CONFIG_TINY:=y
+endif
 
 define Build/Configure
 	$(SED) "s,-I/usr/include/db3,," $(PKG_BUILD_DIR)/Makefile
@@ -82,24 +76,18 @@ define Build/Configure
 		$(PKG_BUILD_DIR)/Makefile
 	$(SED) "s,^LIBC_INCLUDE.*,LIBC_INCLUDE=$(STAGING_DIR)/include," \
 		$(PKG_BUILD_DIR)/Makefile
-	echo "static const char SNAPSHOT[] = \"$(PKG_VERSION)-$(PKG_RELEASE)-openwrt\";" \
+	echo "static const char SNAPSHOT[] = \"$(PKG_VERSION)-$(PKG_RELEASE)-lede\";" \
 		> $(PKG_BUILD_DIR)/include/SNAPSHOT.h
 endef
 
-ifdef CONFIG_USE_GLIBC
-  TARGET_CFLAGS += -DHAVE_SETNS
-endif
-ifdef CONFIG_USE_MUSL
-  TARGET_CFLAGS += -DHAVE_SETNS
-endif
-
+TARGET_CFLAGS += -DHAVE_SETNS
 TARGET_CFLAGS += -ffunction-sections -fdata-sections
 
 MAKE_FLAGS += \
 	EXTRA_CCOPTS="$(TARGET_CFLAGS) -I../include -I$(STAGING_DIR)/usr/include/libnl-tiny" \
 	KERNEL_INCLUDE="$(LINUX_DIR)/include" \
 	SHARED_LIBS="" \
-	LDFLAGS="-Wl,--gc-sections" \
+	LDFLAGS="$(TARGET_LDFLAGS) -Wl,--gc-sections" \
 	IP_CONFIG_TINY=$(IP_CONFIG_TINY) \
 	FPIC="$(FPIC)"
 
@@ -114,15 +102,14 @@ define Build/InstallDev
 	$(CP) $(PKG_BUILD_DIR)/lib/libnetlink.a $(1)/usr/lib/
 endef
 
-define Package/ip/install
-	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_DIR) $(1)/etc/iproute2
-	$(INSTALL_DATA) $(PKG_BUILD_DIR)/etc/iproute2/rt_tables $(1)/etc/iproute2
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ip/ip $(1)/usr/sbin/
+define Package/ip-tiny/install
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ip/ip $(1)/usr/bin/
 endef
 
-define Package/ip-$(BUILD_VARIANT)/install
-	$(Package/ip/install)
+define Package/ip-full/install
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/ip/ip $(1)/usr/sbin/
 endef
 
 define Package/tc/install
@@ -147,9 +134,15 @@ define Package/ss/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/misc/ss $(1)/usr/sbin/
 endef
 
-$(eval $(call BuildPackage,ip))
+define Package/nstat/install
+	$(INSTALL_DIR) $(1)/usr/sbin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/misc/nstat $(1)/usr/sbin/
+endef
+
+$(eval $(call BuildPackage,ip-tiny))
 $(eval $(call BuildPackage,ip-full))
 $(eval $(call BuildPackage,tc))
 $(eval $(call BuildPackage,genl))
 $(eval $(call BuildPackage,ip-bridge))
 $(eval $(call BuildPackage,ss))
+$(eval $(call BuildPackage,nstat))

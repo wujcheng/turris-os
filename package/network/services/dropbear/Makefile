@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2006-2014 OpenWrt.org
+# Copyright (C) 2006-2016 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,14 +8,14 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=dropbear
-PKG_VERSION:=2015.67
+PKG_VERSION:=2017.75
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
 PKG_SOURCE_URL:= \
 	http://matt.ucc.asn.au/dropbear/releases/ \
 	https://dropbear.nl/mirror/releases/
-PKG_MD5SUM:=e967e320344cd4bfebe321e3ab8514d6
+PKG_HASH:=6cbc1dcb1c9709d226dff669e5604172a18cf5dbf9a201474d5618ae4465098c
 
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILES:=LICENSE libtomcrypt/LICENSE libtommath/LICENSE
@@ -23,9 +23,13 @@ PKG_LICENSE_FILES:=LICENSE libtomcrypt/LICENSE libtommath/LICENSE
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
 
-PKG_CONFIG_DEPENDS:=CONFIG_DROPBEAR_ECC
+PKG_CONFIG_DEPENDS:=CONFIG_TARGET_INIT_PATH CONFIG_DROPBEAR_ECC CONFIG_DROPBEAR_CURVE25519
 
 include $(INCLUDE_DIR)/package.mk
+
+ifneq ($(DUMP),1)
+  STAMP_CONFIGURED:=$(strip $(STAMP_CONFIGURED))_$(shell echo $(CONFIG_TARGET_INIT_PATH) | mkhash md5)
+endif
 
 define Package/dropbear/Default
   URL:=http://matt.ucc.asn.au/dropbear/
@@ -48,7 +52,6 @@ endef
 
 define Package/dropbear/conffiles
 /etc/dropbear/dropbear_rsa_host_key
-/etc/dropbear/dropbear_dss_host_key 
 /etc/config/dropbear 
 endef
 
@@ -63,14 +66,13 @@ CONFIGURE_ARGS += \
 	--disable-pam \
 	--enable-openpty \
 	--enable-syslog \
-	$(if $(CONFIG_SHADOW_PASSWORDS),,--disable-shadow) \
 	--disable-lastlog \
-	--disable-utmp \
 	--disable-utmpx \
+	$(if $(CONFIG_DROPBEAR_UTMP),,--disable-utmp) \
 	--disable-wtmp \
 	--disable-wtmpx \
 	--disable-loginfunc \
-	--disable-pututline \
+	$(if $(CONFIG_DROPBEAR_PUTUTLINE),,--disable-pututline) \
 	--disable-pututxline \
 	--disable-zlib \
 	--enable-bundled-libtom
@@ -81,9 +83,19 @@ TARGET_LDFLAGS += -Wl,--gc-sections
 define Build/Configure
 	$(Build/Configure/Default)
 
+	$(SED) 's,^#define DEFAULT_PATH .*$$$$,#define DEFAULT_PATH "$(TARGET_INIT_PATH)",g' \
+		$(PKG_BUILD_DIR)/options.h
+
+	awk 'BEGIN { rc = 1 } \
+	     /'DROPBEAR_CURVE25519'/ { $$$$0 = "$(if $(CONFIG_DROPBEAR_CURVE25519),,// )#define 'DROPBEAR_CURVE25519'"; rc = 0 } \
+	     { print } \
+	     END { exit(rc) }' $(PKG_BUILD_DIR)/options.h \
+	     >$(PKG_BUILD_DIR)/options.h.new && \
+	mv $(PKG_BUILD_DIR)/options.h.new $(PKG_BUILD_DIR)/options.h
+
 	# Enforce that all replacements are made, otherwise options.h has changed
 	# format and this logic is broken.
-	for OPTION in DROPBEAR_ECDSA DROPBEAR_ECDH DROPBEAR_CURVE25519; do \
+	for OPTION in DROPBEAR_ECDSA DROPBEAR_ECDH; do \
 	  awk 'BEGIN { rc = 1 } \
 	       /'$$$$OPTION'/ { $$$$0 = "$(if $(CONFIG_DROPBEAR_ECC),,// )#define '$$$$OPTION'"; rc = 0 } \
 	       { print } \
@@ -91,6 +103,13 @@ define Build/Configure
 	       >$(PKG_BUILD_DIR)/options.h.new && \
 	  mv $(PKG_BUILD_DIR)/options.h.new $(PKG_BUILD_DIR)/options.h || exit 1; \
 	done
+
+	# remove protocol idented software version number
+	$(SED) 's,^#define LOCAL_IDENT .*$$$$,#define LOCAL_IDENT "SSH-2.0-dropbear",g' \
+		$(PKG_BUILD_DIR)/sysoptions.h
+
+	# Enforce rebuild of svr-chansession.c
+	rm -f $(PKG_BUILD_DIR)/svr-chansession.o
 endef
 
 define Build/Compile
@@ -103,18 +122,6 @@ define Build/Compile
 		PROGRAMS="dropbearconvert"
 endef
 
-ifeq ($(CONFIG_TARGET_mpc85xx_p2020_nor_TURRISNOR),y)
-define Package/dropbear/install
-	$(INSTALL_DIR) $(1)/usr/sbin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dropbearmulti $(1)/usr/sbin/dropbear
-	$(INSTALL_DIR) $(1)/usr/bin
-	ln -sf ../sbin/dropbear $(1)/usr/bin/scp
-	ln -sf ../sbin/dropbear $(1)/usr/bin/ssh
-	ln -sf ../sbin/dropbear $(1)/usr/bin/dbclient
-	ln -sf ../sbin/dropbear $(1)/usr/bin/dropbearkey
-	$(INSTALL_DIR) $(1)/etc/dropbear
-endef
-else
 define Package/dropbear/install
 	$(INSTALL_DIR) $(1)/usr/sbin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/dropbearmulti $(1)/usr/sbin/dropbear
@@ -130,9 +137,7 @@ define Package/dropbear/install
 	$(INSTALL_DIR) $(1)/usr/lib/opkg/info
 	$(INSTALL_DIR) $(1)/etc/dropbear
 	touch $(1)/etc/dropbear/dropbear_rsa_host_key
-	touch $(1)/etc/dropbear/dropbear_dss_host_key
 endef
-endif
 
 define Package/dropbearconvert/install
 	$(INSTALL_DIR) $(1)/usr/bin

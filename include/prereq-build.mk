@@ -20,9 +20,13 @@ $(eval $(call TestHostCommand,working-make, \
 	$(MAKE) -v | grep -E 'Make (3\.8[1-9]|3\.9[0-9]|[4-9]\.)'))
 
 $(eval $(call TestHostCommand,case-sensitive-fs, \
-	OpenWrt can only be built on a case-sensitive filesystem, \
+	LEDE can only be built on a case-sensitive filesystem, \
 	rm -f $(TMP_DIR)/test.*; touch $(TMP_DIR)/test.fs; \
 		test ! -f $(TMP_DIR)/test.FS))
+
+$(eval $(call TestHostCommand,proper-umask, \
+	Please build with umask 022 - other values produce broken packages, \
+	umask | grep -xE 00[012][012]))
 
 $(eval $(call SetupHostCommand,gcc, \
 	Please install the GNU C Compiler (gcc), \
@@ -60,15 +64,20 @@ $(eval $(call TestHostCommand,ncurses, \
 	echo 'int main(int argc, char **argv) { initscr(); return 0; }' | \
 		gcc -include ncurses.h -x c -o $(TMP_DIR)/a.out - -lncurses))
 
-$(eval $(call TestHostCommand,zlib, \
-	Please install zlib. (Missing libz.so or zlib.h), \
-	echo 'int main(int argc, char **argv) { gzdopen(0, "rb"); return 0; }' | \
-		gcc -include zlib.h -x c -o $(TMP_DIR)/a.out - -lz))
+ifeq ($(HOST_OS),Linux)
+  zlib_link_flags := -Wl,-Bstatic -lz -Wl,-Bdynamic
+else
+  zlib_link_flags := -lz
+endif
 
-$(eval $(call TestHostCommand,libssl, \
-	Please install the openssl library (with development headers), \
-	echo 'int main(int argc, char **argv) { SSL_library_init(); return 0; }' | \
-		gcc -include openssl/ssl.h -x c -o $(TMP_DIR)/a.out - -lcrypto -lssl))
+$(eval $(call TestHostCommand,zlib, \
+	Please install a static zlib. (Missing libz.a or zlib.h), \
+	echo 'int main(int argc, char **argv) { gzdopen(0, "rb"); return 0; }' | \
+		gcc -include zlib.h -x c -o $(TMP_DIR)/a.out - $(zlib_link_flags)))
+
+$(eval $(call TestHostCommand,perl-thread-queue, \
+	Please install the Perl Thread::Queue module, \
+	perl -MThread::Queue -e 1))
 
 
 $(eval $(call SetupHostCommand,tar,Please install GNU 'tar', \
@@ -92,8 +101,8 @@ $(eval $(call SetupHostCommand,diff,Please install diffutils, \
 	diff --version 2>&1 | grep diff))
 
 $(eval $(call SetupHostCommand,cp,Please install GNU fileutils, \
-	gcp --help, \
-	cp --help))
+	gcp --help 2>&1 | grep 'Copy SOURCE', \
+	cp --help 2>&1 | grep 'Copy SOURCE'))
 
 $(eval $(call SetupHostCommand,seq,, \
 	gseq --version, \
@@ -118,11 +127,6 @@ $(eval $(call SetupHostCommand,stat,Cannot find a file stat utility, \
 	gstat -c%s $(TMP_DIR)/.host.mk, \
 	stat -c%s $(TMP_DIR)/.host.mk))
 
-$(eval $(call SetupHostCommand,md5sum,, \
-	gmd5sum /dev/null | grep d41d8cd98f00b204e9800998ecf8427e, \
-	md5sum /dev/null | grep d41d8cd98f00b204e9800998ecf8427e, \
-	$(SCRIPT_DIR)/md5sum /dev/null | grep d41d8cd98f00b204e9800998ecf8427e))
-
 $(eval $(call SetupHostCommand,unzip,Please install 'unzip', \
 	unzip 2>&1 | grep zipfile, \
 	unzip))
@@ -141,18 +145,17 @@ $(eval $(call SetupHostCommand,python,Please install Python 2.x, \
 	python2 -V 2>&1 | grep Python, \
 	python -V 2>&1 | grep Python))
 
-$(eval $(call SetupHostCommand,svn,Please install the Subversion client, \
-	svn --version | grep Subversion))
-
-$(eval $(call SetupHostCommand,git,Please install Git (git-core) >= 1.6.5, \
-	git clone 2>&1 | grep -- --recursive))
+$(eval $(call SetupHostCommand,git,Please install Git (git-core) >= 1.7.12.2, \
+	git --exec-path | xargs -I % -- grep -q -- --recursive %/git-submodule))
 
 $(eval $(call SetupHostCommand,file,Please install the 'file' package, \
 	file --version 2>&1 | grep file))
 
-$(eval $(call SetupHostCommand,openssl,Please install the 'openssl' utility, \
-	openssl version | grep OpenSSL))
+$(STAGING_DIR_HOST)/bin/mkhash: $(SCRIPT_DIR)/mkhash.c
+	mkdir -p $(dir $@)
+	$(CC) -O2 -I$(TOPDIR)/tools/include -o $@ $<
 
+prereq: $(STAGING_DIR_HOST)/bin/mkhash
 
 # Install ldconfig stub
 $(eval $(call TestHostCommand,ldconfig-stub,Failed to install stub, \

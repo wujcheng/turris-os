@@ -1,4 +1,4 @@
-# 
+#
 # Copyright (C) 2006-2013 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
@@ -12,16 +12,6 @@ UBI_OPTS = -m 2048 -p 128KiB -s 512
 
 AT91SAMA5D3XPLAINED_UBIFS_OPTS = -m 2048 -e 124KiB -c 2048
 AT91SAMA5D3XPLAINED_UBI_OPTS = -m 2048 -p 128KiB -s 2048
-
-define Build/Clean
-	$(MAKE) -C u-boot clean
-endef
-
-define Build/Compile
-	if [ $(CONFIG_AT91_UBOOT) ]; then \
-		$(MAKE) -C u-boot compile; \
-	fi
-endef
 
 define Image/Prepare
 	cp $(LINUX_DIR)/arch/arm/boot/Image $(KDIR)/Image
@@ -76,7 +66,6 @@ define Image/Build/Kernel/Default
 	$(call Image/Build/Kernel/AT91SAM9M10G45EK)
 	$(call Image/Build/Kernel/AT91SAM9X25EK)
 	$(call Image/Build/Kernel/AT91SAM9X35EK)
-	$(call Image/Build/Kernel/AT91SAMA5D3XPLAINED)
 	$(call Image/Build/Kernel/LMU5000)
 	$(call Image/Build/Kernel/TNYA9260)
 	$(call Image/Build/Kernel/TNYA9263)

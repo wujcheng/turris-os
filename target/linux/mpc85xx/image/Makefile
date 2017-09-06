@@ -21,36 +21,13 @@ endef
 
 zImage:=$(BIN_DIR)/$(IMG_PREFIX)-zImage
 
-
-define Image/Prepare
-	cp $(KDIR)/zImage $(BIN_DIR)/$(IMG_PREFIX)-zImage
-endef
-
-define Image/BuildKernel/Initramfs
-	cp $(KDIR)/zImage-initramfs $(BIN_DIR)/$(IMG_PREFIX)-initramfs-zImage
-endef
+DTS_TARGETS = fsl/p1010rdb-pa tl-wdr4900-v1 fsl/p1020rdb
 
 define Image/BuildKernel
-	[ -d $(BIN_DIR) ] || mkdir -p $(BIN_DIR);
-	$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb $(LINUX_DIR)/arch/powerpc/boot/dts/$($(PROFILE)_DTS).dts -o $(BIN_DIR)/$(IMG_PREFIX)-$($(PROFILE)_DTS).fdt;
-	cp $(KDIR)/zImage $(zImage);
-endef
-
-define Image/InstallKernel
-
-ifneq ($(CONFIG_TARGET_ROOTFS_INCLUDE_DTB),)
-	$(INSTALL_DIR) $(TARGET_DIR)/boot
-	$(CP) $(BIN_DIR)/$(IMG_PREFIX)-$($(PROFILE)_DTS).fdt $(TARGET_DIR)/boot/
-	ln -sf $(IMG_PREFIX)-$($(PROFILE)_DTS).fdt $(TARGET_DIR)/boot/fdt
-endif
-
-ifneq ($(CONFIG_TARGET_ROOTFS_INCLUDE_KERNEL),)
-	$(INSTALL_DIR) $(TARGET_DIR)/boot
-ifneq ($(CONFIG_TARGET_ROOTFS_INCLUDE_ZIMAGE),)
-	$(CP) $(BIN_DIR)/$(IMG_PREFIX)-zImage $(TARGET_DIR)/boot/
-	ln -sf $(IMG_PREFIX)-zImage $(TARGET_DIR)/boot/zImage
-endif
-endif
+	cp $(KDIR)/zImage $(BIN_DIR)/$(IMG_PREFIX)-zImage
+	$(foreach dts,$(DTS_TARGETS),
+		$(LINUX_DIR)/scripts/dtc/dtc -I dts -O dtb $(DTS_DIR)/$(dts).dts > $(BIN_DIR)/$(IMG_PREFIX)-$(notdir $(dts)).fdt
+	)
 endef
 
 define Image/BuildKernel/Initramfs
@@ -75,9 +52,8 @@ define Image/Build/Profile/TLWDR4900
 	$(call Image/Build/TPLINK,$(1),tl-wdr4900-v1,cuImage.tl-wdr4900-v1,0x49000001,1,16Mppc)
 endef
 
-#define Image/Build/Profile/Default
+#$define Image/Build/Profile/Default
 #	$(call Image/Build/Profile/TLWDR4900,$(1))
-#	$(call Image/Build/Profile/Turris,$(1))
 #endef
 
 define Image/Build/Profile/TURRISNOR
@@ -129,10 +105,6 @@ define Image/Build/Profile/TURRISNAND
 
 endef
 
-
-define Image/Build/Profile/P2020RDBPCA
-	echo "P2020RDBPCA build"
-endef
 
 define Image/Build/ext2
 	cp $(KDIR)/root.$(1) $(BIN_DIR)/$(IMG_PREFIX)-ext2.img

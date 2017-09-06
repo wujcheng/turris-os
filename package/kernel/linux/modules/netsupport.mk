@@ -148,7 +148,10 @@ $(eval $(call KernelPackage,8021q))
 define KernelPackage/udptunnel4
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=IPv4 UDP tunneling support
-  KCONFIG:=CONFIG_NET_UDP_TUNNEL
+  KCONFIG:= \
+	CONFIG_NET_UDP_TUNNEL \
+	CONFIG_VXLAN=m
+  HIDDEN:=1
   FILES:=$(LINUX_DIR)/net/ipv4/udp_tunnel.ko
   AUTOLOAD:=$(call AutoLoad,32,udp_tunnel)
 endef
@@ -160,7 +163,10 @@ define KernelPackage/udptunnel6
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=IPv6 UDP tunneling support
   DEPENDS:=@IPV6
-  KCONFIG:=CONFIG_NET_UDP_TUNNEL
+  KCONFIG:= \
+	CONFIG_NET_UDP_TUNNEL \
+	CONFIG_VXLAN=m
+  HIDDEN:=1
   FILES:=$(LINUX_DIR)/net/ipv6/ip6_udp_tunnel.ko
   AUTOLOAD:=$(call AutoLoad,32,ip6_udp_tunnel)
 endef
@@ -286,7 +292,10 @@ IPSEC-m:= \
 define KernelPackage/ipsec
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=IPsec related modules (IPv4 and IPv6)
-  DEPENDS:=+kmod-crypto-authenc +kmod-crypto-iv +kmod-crypto-des +kmod-crypto-hmac +kmod-crypto-md5 +kmod-crypto-sha1 +kmod-crypto-deflate +kmod-crypto-cbc
+  DEPENDS:= \
+	+kmod-crypto-authenc +kmod-crypto-cbc +kmod-crypto-deflate \
+	+kmod-crypto-des +kmod-crypto-echainiv +kmod-crypto-hmac \
+	+kmod-crypto-iv +kmod-crypto-md5 +kmod-crypto-sha1
   KCONFIG:= \
 	CONFIG_NET_KEY \
 	CONFIG_XFRM_USER \
@@ -300,6 +309,7 @@ define KernelPackage/ipsec/description
  Kernel modules for IPsec support in both IPv4 and IPv6.
  Includes:
  - af_key
+ - xfrm_algo
  - xfrm_ipcomp
  - xfrm_user
 endef
@@ -404,7 +414,7 @@ endef
 $(eval $(call KernelPackage,iptunnel))
 
 
-define KernelPackage/ipvti
+define KernelPackage/ip-vti
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=IP VTI (Virtual Tunnel Interface)
   DEPENDS:=+kmod-iptunnel +kmod-iptunnel4 +kmod-ipsec4
@@ -413,11 +423,27 @@ define KernelPackage/ipvti
   AUTOLOAD:=$(call AutoLoad,33,ip_vti)
 endef
 
-define KernelPackage/ipvti/description
+define KernelPackage/ip-vti/description
  Kernel modules for IP VTI (Virtual Tunnel Interface)
 endef
 
-$(eval $(call KernelPackage,ipvti))
+$(eval $(call KernelPackage,ip-vti))
+
+
+define KernelPackage/ip6-vti
+  SUBMENU:=$(NETWORK_SUPPORT_MENU)
+  TITLE:=IPv6 VTI (Virtual Tunnel Interface)
+  DEPENDS:=+kmod-iptunnel +kmod-ip6-tunnel +kmod-ipsec6
+  KCONFIG:=CONFIG_IPV6_VTI
+  FILES:=$(LINUX_DIR)/net/ipv6/ip6_vti.ko
+  AUTOLOAD:=$(call AutoLoad,33,ip6_vti)
+endef
+
+define KernelPackage/ip6-vti/description
+ Kernel modules for IPv6 VTI (Virtual Tunnel Interface)
+endef
+
+$(eval $(call KernelPackage,ip6-vti))
 
 
 define KernelPackage/iptunnel4
@@ -425,7 +451,8 @@ define KernelPackage/iptunnel4
   TITLE:=IPv4 tunneling
   HIDDEN:=1
   KCONFIG:= \
-	CONFIG_INET_TUNNEL
+	CONFIG_INET_TUNNEL \
+	CONFIG_NET_IPIP=m
   FILES:=$(LINUX_DIR)/net/ipv4/tunnel4.ko
   AUTOLOAD:=$(call AutoLoad,31,tunnel4)
 endef
@@ -709,8 +736,8 @@ $(eval $(call KernelPackage,mppe))
 
 
 SCHED_MODULES = $(patsubst $(LINUX_DIR)/net/sched/%.ko,%,$(wildcard $(LINUX_DIR)/net/sched/*.ko))
-SCHED_MODULES_CORE = sch_ingress sch_fq_codel sch_hfsc cls_fw cls_route cls_flow cls_tcindex cls_u32 em_u32 act_mirred act_skbedit
-SCHED_MODULES_FILTER = $(SCHED_MODULES_CORE) act_connmark sch_esfq
+SCHED_MODULES_CORE = sch_ingress sch_fq_codel sch_hfsc sch_htb sch_tbf cls_fw cls_route cls_flow cls_tcindex cls_u32 em_u32 act_mirred act_skbedit
+SCHED_MODULES_FILTER = $(SCHED_MODULES_CORE) act_connmark sch_netem
 SCHED_MODULES_EXTRA = $(filter-out $(SCHED_MODULES_FILTER),$(SCHED_MODULES))
 SCHED_FILES = $(patsubst %,$(LINUX_DIR)/net/sched/%.ko,$(filter $(SCHED_MODULES_CORE),$(SCHED_MODULES)))
 SCHED_FILES_EXTRA = $(patsubst %,$(LINUX_DIR)/net/sched/%.ko,$(SCHED_MODULES_EXTRA))
@@ -721,6 +748,8 @@ define KernelPackage/sched-core
   KCONFIG:= \
 	CONFIG_NET_SCHED=y \
 	CONFIG_NET_SCH_HFSC \
+	CONFIG_NET_SCH_HTB \
+	CONFIG_NET_SCH_TBF \
 	CONFIG_NET_SCH_INGRESS \
 	CONFIG_NET_SCH_FQ_CODEL \
 	CONFIG_NET_CLS=y \
@@ -755,18 +784,6 @@ define KernelPackage/sched-connmark
 endef
 $(eval $(call KernelPackage,sched-connmark))
 
-define KernelPackage/sched-esfq
-  SUBMENU:=$(NETWORK_SUPPORT_MENU)
-  TITLE:=Traffic shaper ESFQ support
-  DEPENDS:=+kmod-sched-core +kmod-ipt-core +kmod-ipt-conntrack
-  KCONFIG:= \
-	CONFIG_NET_SCH_ESFQ \
-	CONFIG_NET_SCH_ESFQ_NFCT=y
-  FILES:=$(LINUX_DIR)/net/sched/sch_esfq.ko
-  AUTOLOAD:=$(call AutoLoad,72, sch_esfq)
-endef
-$(eval $(call KernelPackage,sched-esfq))
-
 define KernelPackage/sched
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=Extra traffic schedulers
@@ -774,25 +791,17 @@ define KernelPackage/sched
   KCONFIG:= \
 	CONFIG_NET_SCH_CODEL \
 	CONFIG_NET_SCH_DSMARK \
-	CONFIG_NET_SCH_HTB \
 	CONFIG_NET_SCH_FIFO \
 	CONFIG_NET_SCH_GRED \
 	CONFIG_NET_SCH_PRIO \
 	CONFIG_NET_SCH_RED \
-	CONFIG_NET_SCH_TBF \
 	CONFIG_NET_SCH_SFQ \
 	CONFIG_NET_SCH_TEQL \
 	CONFIG_NET_SCH_FQ \
 	CONFIG_NET_SCH_PIE \
 	CONFIG_NET_CLS_BASIC \
 	CONFIG_NET_ACT_POLICE \
-	CONFIG_NET_ACT_GACT \
 	CONFIG_NET_ACT_IPT \
-	CONFIG_NET_ACT_NAT \
-	CONFIG_NET_ACT_PEDIT \
-	CONFIG_NET_ACT_CSUM \
-	CONFIG_NET_ACT_VLAN \
-	CONFIG_NET_ACT_BPF \
 	CONFIG_NET_EMATCH_CMP \
 	CONFIG_NET_EMATCH_NBYTE \
 	CONFIG_NET_EMATCH_META \
@@ -969,15 +978,12 @@ define KernelPackage/dnsresolver
   AUTOLOAD:=$(call AutoLoad,30,dns_resolver)
 endef
 
-define KernelPackage/dnsresolver/description
- Kernel modules for DNS-RESOLVER support
-endef
-
 $(eval $(call KernelPackage,dnsresolver))
 
 define KernelPackage/rxrpc
   SUBMENU:=$(NETWORK_SUPPORT_MENU)
   TITLE:=AF_RXRPC support
+  HIDDEN:=1
   KCONFIG:= \
 	CONFIG_AF_RXRPC \
 	CONFIG_RXKAD=m \
@@ -994,3 +1000,62 @@ define KernelPackage/rxrpc/description
 endef
 
 $(eval $(call KernelPackage,rxrpc))
+
+define KernelPackage/mpls
+  SUBMENU:=$(NETWORK_SUPPORT_MENU)
+  TITLE:=MPLS support
+  DEPENDS:=@!(LINUX_3_18||LINUX_4_1)
+  KCONFIG:= \
+	CONFIG_MPLS=y \
+	CONFIG_LWTUNNEL=y \
+	CONFIG_NET_MPLS_GSO=m \
+	CONFIG_MPLS_ROUTING=m \
+	CONFIG_MPLS_IPTUNNEL=m
+  FILES:= \
+	$(LINUX_DIR)/net/mpls/mpls_gso.ko \
+	$(LINUX_DIR)/net/mpls/mpls_iptunnel.ko \
+	$(LINUX_DIR)/net/mpls/mpls_router.ko
+  AUTOLOAD:=$(call AutoLoad,30,mpls_router mpls_iptunnel mpls_gso)
+endef
+
+define KernelPackage/mpls/description
+  Kernel support for MPLS
+endef
+
+$(eval $(call KernelPackage,mpls))
+
+define KernelPackage/9pnet
+  SUBMENU:=$(NETWORK_SUPPORT_MENU)
+  TITLE:=Plan 9 Resource Sharing Support (9P2000)
+  DEPENDS:=@VIRTIO_SUPPORT
+  KCONFIG:= \
+	CONFIG_NET_9P \
+	CONFIG_NET_9P_DEBUG=n \
+	CONFIG_NET_9P_VIRTIO
+  FILES:= \
+	$(LINUX_DIR)/net/9p/9pnet.ko \
+	$(LINUX_DIR)/net/9p/9pnet_virtio.ko
+  AUTOLOAD:=$(call AutoLoad,29,9pnet 9pnet_virtio)
+endef
+
+define KernelPackage/9pnet/description
+  Kernel support support for
+  Plan 9 resource sharing via the 9P2000 protocol.
+endef
+
+$(eval $(call KernelPackage,9pnet))
+
+
+define KernelPackage/nlmon
+  SUBMENU:=$(NETWORK_SUPPORT_MENU)
+  TITLE:=Virtual netlink monitoring device
+  KCONFIG:=CONFIG_NLMON
+  FILES:=$(LINUX_DIR)/drivers/net/nlmon.ko
+  AUTOLOAD:=$(call AutoProbe,nlmon)
+endef
+
+define KernelPackage/nlmon/description
+  Kernel module which adds a monitoring device for netlink.
+endef
+
+$(eval $(call KernelPackage,nlmon))

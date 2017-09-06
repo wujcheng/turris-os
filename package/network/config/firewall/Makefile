@@ -1,5 +1,6 @@
 #
-# Copyright (C) 2013-2015 OpenWrt.org
+# Copyright (C) 2013-2016 OpenWrt.org
+# Copyright (C) 2016 LEDE project
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,15 +9,15 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=firewall
-PKG_VERSION:=2016-02-17
-PKG_RELEASE:=$(PKG_SOURCE_VERSION)
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://gitlab.labs.nic.cz/turris/firewall3.git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE_DATE:=2016-02-17
 PKG_SOURCE_VERSION:=10f729a8fb44e9c31d4d2170e2f83827b9327db5
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
 PKG_MAINTAINER:=Stepan Henek <stepan.henek@nic.cz>
+
+PKG_CONFIG_DEPENDS := CONFIG_IPV6
 
 include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/cmake.mk
@@ -25,12 +26,11 @@ define Package/firewall
   SECTION:=net
   CATEGORY:=Base system
   TITLE:=OpenWrt C Firewall
-  DEPENDS:=+libubox +libubus +libuci +libip4tc +IPV6:libip6tc +libxtables +kmod-ipt-core +kmod-ipt-nat
+  DEPENDS:=+libubox +libubus +libuci +libip4tc +IPV6:libip6tc +libxtables +kmod-ipt-core +kmod-ipt-conntrack +kmod-ipt-nat
 endef
 
 define Package/firewall/description
  This package provides a config-compatible C implementation of the UCI firewall.
- It is a modified version of the original project (git://nbd.name/firewall3.git) enriched with custom logging rules.
 endef
 
 define Package/firewall/conffiles

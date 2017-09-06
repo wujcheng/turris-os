@@ -1,22 +1,21 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=usbmode
-PKG_VERSION:=2014-08-26
-PKG_RELEASE=$(PKG_SOURCE_VERSION)
+PKG_RELEASE:=1
 
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=http://git.openwrt.org/project/usbmode.git
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_VERSION:=993a9a542791953c4804f7ddbb3a07756738e37a
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION)-$(PKG_SOURCE_VERSION).tar.gz
+PKG_SOURCE_URL=$(LEDE_GIT)/project/usbmode.git
+PKG_SOURCE_DATE:=2017-05-24
+PKG_SOURCE_VERSION:=453da8e540b1c53d357b897d6c70372cd4633390
+PKG_MIRROR_HASH:=b4a7132b940192f2e9a74bd890bd7008ede701e1d52284c3ade0cdc7d663929f
 CMAKE_INSTALL:=1
 
 PKG_LICENSE:=GPL-2.0
 PKG_LICENSE_FILES:=
 
-PKG_MAINTAINER:=Felix Fietkau <nbd@openwrt.org>
+PKG_MAINTAINER:=Felix Fietkau <nbd@nbd.name>
 
-PKG_DATA_VERSION:=20150115
+PKG_DATA_VERSION:=20170205
 PKG_DATA_URL:=http://www.draisberghof.de/usb_modeswitch
 PKG_DATA_PATH:=usb-modeswitch-data-$(PKG_DATA_VERSION)
 PKG_DATA_FILENAME:=$(PKG_DATA_PATH).tar.bz2
@@ -27,7 +26,7 @@ include $(INCLUDE_DIR)/cmake.mk
 define Download/data
   FILE:=$(PKG_DATA_FILENAME)
   URL:=$(PKG_DATA_URL)
-  MD5SUM:=662bcd56a97e560ea974bc710822de51
+  HASH:=e2dcfd9d28928d8d8f03381571a23442b3c50d48d343bc40a1a07d01662738d1
 endef
 $(eval $(call Download,data))
 
@@ -44,6 +43,17 @@ define Build/Prepare
 	rm -f \
 		$(PKG_BUILD_DIR)/$(PKG_DATA_PATH)/usb_modeswitch.d/05c6:1000:sVe=GT
 	cp ./data/* $(PKG_BUILD_DIR)/$(PKG_DATA_PATH)/usb_modeswitch.d/
+	#in order to keep the Lede GIT repo free of filenames with colons,
+	#we name the files xxxx-yyyy
+	# and rename here after copying to the build directory
+	for filevar in $(PKG_BUILD_DIR)/$(PKG_DATA_PATH)/usb_modeswitch.d/*-* ; \
+	do \
+		[ -f "$$$$filevar" ] || continue ; \
+		FILENAME=$$$$(basename $$$$filevar) ; \
+		NEWNAME=$$$${FILENAME//-/:} ; \
+		rm "$(PKG_BUILD_DIR)/$(PKG_DATA_PATH)/usb_modeswitch.d/$$$$NEWNAME" ; \
+		mv "$(PKG_BUILD_DIR)/$(PKG_DATA_PATH)/usb_modeswitch.d/$$$$FILENAME" "$(PKG_BUILD_DIR)/$(PKG_DATA_PATH)/usb_modeswitch.d/$$$$NEWNAME" ; \
+	done
 endef
 
 define Package/usb-modeswitch/install

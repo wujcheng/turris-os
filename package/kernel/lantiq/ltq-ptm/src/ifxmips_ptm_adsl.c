@@ -43,6 +43,7 @@
 #include <linux/ioctl.h>
 #include <linux/etherdevice.h>
 #include <linux/interrupt.h>
+#include <linux/netdevice.h>
 #include <asm/io.h>
 
 /*
@@ -127,6 +128,7 @@ static int ptm_stop(struct net_device *);
   static unsigned int ptm_poll(int, unsigned int);
   static int ptm_napi_poll(struct napi_struct *, int);
 static int ptm_hard_start_xmit(struct sk_buff *, struct net_device *);
+static int ptm_change_mtu(struct net_device *, int);
 static int ptm_ioctl(struct net_device *, struct ifreq *, int);
 static void ptm_tx_timeout(struct net_device *);
 
@@ -245,7 +247,7 @@ static struct net_device_ops g_ptm_netdev_ops = {
     .ndo_start_xmit      = ptm_hard_start_xmit,
     .ndo_validate_addr   = eth_validate_addr,
     .ndo_set_mac_address = eth_mac_addr,
-    .ndo_change_mtu      = eth_change_mtu,
+    .ndo_change_mtu      = ptm_change_mtu,
     .ndo_do_ioctl        = ptm_ioctl,
     .ndo_tx_timeout      = ptm_tx_timeout,
 };
@@ -277,6 +279,10 @@ static int g_showtime = 0;
 
 static void ptm_setup(struct net_device *dev, int ndev)
 {
+#if defined(CONFIG_IFXMIPS_DSL_CPE_MEI) || defined(CONFIG_IFXMIPS_DSL_CPE_MEI_MODULE)
+    netif_carrier_off(dev);
+#endif
+
     /*  hook network operations */
     dev->netdev_ops      = &g_ptm_netdev_ops;
     netif_napi_add(dev, &g_ptm_priv_data.itf[ndev].napi, ptm_napi_poll, 25);
@@ -444,6 +450,15 @@ PTM_HARD_START_XMIT_FAIL:
     dev_kfree_skb_any(skb);
     g_ptm_priv_data.itf[ndev].stats.tx_dropped++;
     return NETDEV_TX_OK;
+}
+
+static int ptm_change_mtu(struct net_device *dev, int mtu)
+{
+	/* Allow up to 1508 bytes, for RFC4638 */
+        if (mtu < 68 || mtu > ETH_DATA_LEN + 8)
+                return -EINVAL;
+        dev->mtu = mtu;
+        return 0;
 }
 
 static int ptm_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
@@ -1384,8 +1399,12 @@ static INLINE void init_tables(void)
 
 static int ptm_showtime_enter(struct port_cell_info *port_cell, void *xdata_addr)
 {
+    int i;
 
     g_showtime = 1;
+
+    for ( i = 0; i < ARRAY_SIZE(g_net_dev); i++ )
+        netif_carrier_on(g_net_dev[i]);
 
     printk("enter showtime\n");
 
@@ -1394,8 +1413,13 @@ static int ptm_showtime_enter(struct port_cell_info *port_cell, void *xdata_addr
 
 static int ptm_showtime_exit(void)
 {
+    int i;
+
     if ( !g_showtime )
         return -1;
+
+    for ( i = 0; i < ARRAY_SIZE(g_net_dev); i++ )
+        netif_carrier_off(g_net_dev[i]);
 
     g_showtime = 0;
 
@@ -1455,7 +1479,11 @@ static int ifx_ptm_init(void)
     }
 
     /*  register interrupt handler  */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,1,0)
+    ret = request_irq(PPE_MAILBOX_IGU1_INT, mailbox_irq_handler, 0, "ptm_mailbox_isr", &g_ptm_priv_data);
+#else
     ret = request_irq(PPE_MAILBOX_IGU1_INT, mailbox_irq_handler, IRQF_DISABLED, "ptm_mailbox_isr", &g_ptm_priv_data);
+#endif
     if ( ret ) {
         if ( ret == -EBUSY ) {
             err("IRQ may be occupied by other driver, please reconfig to disable it.");

@@ -68,6 +68,7 @@ define KernelPackage/nf-conntrack
   KCONFIG:= \
         CONFIG_NETFILTER=y \
         CONFIG_NETFILTER_ADVANCED=y \
+        CONFIG_NF_CONNTRACK_ZONES=y \
 	$(KCONFIG_NF_CONNTRACK)
   FILES:=$(foreach mod,$(NF_CONNTRACK-m),$(LINUX_DIR)/net/$(mod).ko)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(NF_CONNTRACK-m)))
@@ -288,6 +289,28 @@ endef
 $(eval $(call KernelPackage,ipt-nat))
 
 
+define KernelPackage/ipt-raw
+  TITLE:=Netfilter IPv4 raw table support
+  KCONFIG:=CONFIG_IP_NF_RAW
+  FILES:=$(LINUX_DIR)/net/ipv4/netfilter/iptable_raw.ko
+  AUTOLOAD:=$(call AutoProbe,iptable_raw)
+  $(call AddDepends/ipt)
+endef
+
+$(eval $(call KernelPackage,ipt-raw))
+
+
+define KernelPackage/ipt-raw6
+  TITLE:=Netfilter IPv6 raw table support
+  KCONFIG:=CONFIG_IP6_NF_RAW
+  FILES:=$(LINUX_DIR)/net/ipv6/netfilter/ip6table_raw.ko
+  AUTOLOAD:=$(call AutoProbe,ip6table_raw)
+  $(call AddDepends/ipt,+kmod-ip6tables)
+endef
+
+$(eval $(call KernelPackage,ipt-raw6))
+
+
 define KernelPackage/ipt-nat6
   TITLE:=IPv6 NAT targets
   KCONFIG:=$(KCONFIG_IPT_NAT6)
@@ -369,29 +392,11 @@ endef
 $(eval $(call KernelPackage,nf-nathelper-extra))
 
 
-define KernelPackage/ipt-queue
-  TITLE:=Module for user-space packet queueing
-  KCONFIG:=$(KCONFIG_IPT_QUEUE)
-  DEPENDS:=@!LINUX_3_6
-  FILES:=$(foreach mod,$(IPT_QUEUE-m),$(LINUX_DIR)/net/$(mod).ko)
-  AUTOLOAD:=$(call AutoProbe,$(notdir $(IPT_QUEUE-m)))
-  $(call AddDepends/ipt)
-endef
-
-define KernelPackage/ipt-queue/description
- Netfilter (IPv4) module for user-space packet queueing
- Includes:
- - QUEUE
-endef
-
-$(eval $(call KernelPackage,ipt-queue))
-
-
 define KernelPackage/ipt-ulog
   TITLE:=Module for user-space packet logging
   KCONFIG:=$(KCONFIG_IPT_ULOG)
   FILES:=$(foreach mod,$(IPT_ULOG-m),$(LINUX_DIR)/net/$(mod).ko)
-  AUTOLOAD:=$(call AutoLoad,27,$(notdir $(IPT_ULOG-m)))
+  AUTOLOAD:=$(call AutoProbe,$(notdir $(IPT_ULOG-m)))
   $(call AddDepends/ipt)
 endef
 
@@ -408,7 +413,7 @@ define KernelPackage/ipt-nflog
   TITLE:=Module for user-space packet logging
   KCONFIG:=$(KCONFIG_IPT_NFLOG)
   FILES:=$(foreach mod,$(IPT_NFLOG-m),$(LINUX_DIR)/net/$(mod).ko)
-  AUTOLOAD:=$(call AutoLoad,27,$(notdir $(IPT_NFLOG-m)))
+  AUTOLOAD:=$(call AutoProbe,$(notdir $(IPT_NFLOG-m)))
   $(call AddDepends/ipt,+kmod-nfnetlink-log)
 endef
 
@@ -474,12 +479,11 @@ define KernelPackage/ipt-tproxy
   TITLE:=Transparent proxying support
   DEPENDS+=+kmod-ipt-conntrack +IPV6:kmod-ip6tables
   KCONFIG:= \
-  	CONFIG_NETFILTER_TPROXY \
   	CONFIG_NETFILTER_XT_MATCH_SOCKET \
   	CONFIG_NETFILTER_XT_TARGET_TPROXY
   FILES:= \
   	$(foreach mod,$(IPT_TPROXY-m),$(LINUX_DIR)/net/$(mod).ko)
-  AUTOLOAD:=$(call AutoProbe,$(notdir nf_tproxy_core $(IPT_TPROXY-m)))
+  AUTOLOAD:=$(call AutoProbe,$(notdir $(IPT_TPROXY-m)))
   $(call AddDepends/ipt)
 endef
 
@@ -593,10 +597,10 @@ $(eval $(call KernelPackage,ipt-clusterip))
 
 define KernelPackage/ipt-extra
   TITLE:=Extra modules
-  KCONFIG:=$(KCONFIG_IPT_EXTRA) CONFIG_BRIDGE_NETFILTER=y
+  KCONFIG:=$(KCONFIG_IPT_EXTRA)
   FILES:=$(foreach mod,$(IPT_EXTRA-m),$(LINUX_DIR)/net/$(mod).ko)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(IPT_EXTRA-m)))
-  $(call AddDepends/ipt)
+  $(call AddDepends/ipt,+kmod-br-netfilter)
 endef
 
 define KernelPackage/ipt-extra/description
@@ -604,7 +608,7 @@ define KernelPackage/ipt-extra/description
  Includes:
  - addrtype
  - owner
- - physdev
+ - physdev (if bridge support was enabled in kernel)
  - pkttype
  - quota
 endef
@@ -661,13 +665,25 @@ endef
 $(eval $(call KernelPackage,arptables))
 
 
+define KernelPackage/br-netfilter
+  SUBMENU:=$(NF_MENU)
+  TITLE:=Bridge netfilter support modules
+  HIDDEN:=1
+  DEPENDS:=+kmod-ipt-core +kmod-bridge
+  FILES:=$(LINUX_DIR)/net/bridge/br_netfilter.ko
+  KCONFIG:=CONFIG_BRIDGE_NETFILTER
+  AUTOLOAD:=$(call AutoProbe,br_netfilter)
+endef
+
+$(eval $(call KernelPackage,br-netfilter))
+
+
 define KernelPackage/ebtables
   SUBMENU:=$(NF_MENU)
   TITLE:=Bridge firewalling modules
-  DEPENDS:=+kmod-ipt-core +kmod-bridge
+  DEPENDS:=+kmod-ipt-core +kmod-bridge +kmod-br-netfilter
   FILES:=$(foreach mod,$(EBTABLES-m),$(LINUX_DIR)/net/$(mod).ko)
-  KCONFIG:=CONFIG_BRIDGE_NETFILTER=y \
-	$(KCONFIG_EBTABLES)
+  KCONFIG:=$(KCONFIG_EBTABLES)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(EBTABLES-m)))
 endef
 
@@ -740,7 +756,6 @@ define KernelPackage/nfnetlink
   FILES:=$(foreach mod,$(NFNETLINK-m),$(LINUX_DIR)/net/$(mod).ko)
   KCONFIG:=$(KCONFIG_NFNETLINK)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(NFNETLINK-m)))
-  $(call AddDepends/ipt)
 endef
 
 define KernelPackage/nfnetlink/description
@@ -754,27 +769,6 @@ define AddDepends/nfnetlink
   SUBMENU:=$(NF_MENU)
   DEPENDS+=+kmod-nfnetlink $(1)
 endef
-
-
-define KernelPackage/nfnetlink-nfacct
-  TITLE:=Netfilter Accouting over NFNETLINK interface
-  FILES:= \
-   $(LINUX_DIR)/net/netfilter/nfnetlink_acct.ko \
-   $(LINUX_DIR)/net/netfilter/xt_nfacct.ko
-  KCONFIG:= \
-   CONFIG_NETFILTER_NETLINK_ACCT \
-   CONFIG_NETFILTER_XT_MATCH_NFACCT
-  AUTOLOAD:=$(call AutoProbe,nfnetlink_acct xt_nfacct)
-  $(call AddDepends/nfnetlink)
-endef
-
-define KernelPackage/nfnetlink-nfacct/description
- Kernel modules support for matching and managing accounting objects
- Includes:
- - nfacct
-endef
-
-$(eval $(call KernelPackage,nfnetlink-nfacct))
 
 
 define KernelPackage/nfnetlink-log
@@ -846,7 +840,7 @@ $(eval $(call KernelPackage,ipt-hashlimit))
 define KernelPackage/nft-core
   SUBMENU:=$(NF_MENU)
   TITLE:=Netfilter nf_tables support
-  DEPENDS:=+kmod-nfnetlink +kmod-nf-conntrack6
+  DEPENDS:=+kmod-nfnetlink +kmod-nf-conntrack6 +kmod-nf-ipt +kmod-nf-ipt6
   FILES:=$(foreach mod,$(NFT_CORE-m),$(LINUX_DIR)/net/$(mod).ko)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(NFT_CORE-m)))
   KCONFIG:= \
@@ -869,7 +863,7 @@ $(eval $(call KernelPackage,nft-core))
 define KernelPackage/nft-nat
   SUBMENU:=$(NF_MENU)
   TITLE:=Netfilter nf_tables NAT support
-  DEPENDS:=+kmod-nft-core +kmod-nf-nat
+  DEPENDS:=+kmod-nft-core +kmod-nf-nat +kmod-nf-nat6
   FILES:=$(foreach mod,$(NFT_NAT-m),$(LINUX_DIR)/net/$(mod).ko)
   AUTOLOAD:=$(call AutoProbe,$(notdir $(NFT_NAT-m)))
   KCONFIG:=$(KCONFIG_NFT_NAT)

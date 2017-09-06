@@ -72,7 +72,7 @@ define KernelPackage/lib-crc16
   TITLE:=CRC16 support
   KCONFIG:=CONFIG_CRC16
   FILES:=$(LINUX_DIR)/lib/crc16.ko
-  AUTOLOAD:=$(call AutoProbe,crc16)
+  AUTOLOAD:=$(call AutoLoad,20,crc16,1)
 endef
 
 define KernelPackage/lib-crc16/description
@@ -104,6 +104,7 @@ define KernelPackage/lib-lzo
   KCONFIG:= \
 	CONFIG_LZO_COMPRESS \
 	CONFIG_LZO_DECOMPRESS
+  HIDDEN:=1
   FILES:= \
 	$(LINUX_DIR)/lib/lzo/lzo_compress.ko \
 	$(LINUX_DIR)/lib/lzo/lzo_decompress.ko
@@ -120,6 +121,7 @@ $(eval $(call KernelPackage,lib-lzo))
 define KernelPackage/lib-lz4
   SUBMENU:=$(LIB_MENU)
   TITLE:=LZ4 support
+  HIDDEN:=1
   KCONFIG:= \
 	CONFIG_LZ4_COMPRESS \
 	CONFIG_LZ4_DECOMPRESS
@@ -193,19 +195,28 @@ endef
 $(eval $(call KernelPackage,lib-textsearch))
 
 
-define KernelPackage/lib-zlib
+define KernelPackage/lib-zlib-inflate
   SUBMENU:=$(LIB_MENU)
   TITLE:=Zlib support
-  KCONFIG:= \
-    CONFIG_ZLIB_DEFLATE \
-    CONFIG_ZLIB_INFLATE
-  FILES:= \
-    $(LINUX_DIR)/lib/zlib_deflate/zlib_deflate.ko \
-    $(LINUX_DIR)/lib/zlib_inflate/zlib_inflate.ko
-  AUTOLOAD:=$(call AutoProbe,zlib_deflate zlib_inflate)
+  HIDDEN:=1
+  KCONFIG:=CONFIG_ZLIB_INFLATE
+  FILES:=$(LINUX_DIR)/lib/zlib_inflate/zlib_inflate.ko
+  AUTOLOAD:=$(call AutoProbe,zlib_inflate)
 endef
 
-$(eval $(call KernelPackage,lib-zlib))
+$(eval $(call KernelPackage,lib-zlib-inflate))
+
+
+define KernelPackage/lib-zlib-deflate
+  SUBMENU:=$(LIB_MENU)
+  TITLE:=Zlib support
+  HIDDEN:=1
+  KCONFIG:=CONFIG_ZLIB_DEFLATE
+  FILES:=$(LINUX_DIR)/lib/zlib_deflate/zlib_deflate.ko
+  AUTOLOAD:=$(call AutoProbe,zlib_deflate)
+endef
+
+$(eval $(call KernelPackage,lib-zlib-deflate))
 
 
 define KernelPackage/lib-cordic
@@ -221,18 +232,3 @@ define KernelPackage/lib-cordic/description
 endef
 
 $(eval $(call KernelPackage,lib-cordic))
-
-
-define KernelPackage/lib-oid-registry
-  SUBMENU:=$(LIB_MENU)
-  TITLE:=OID-Registry function support
-  KCONFIG:=CONFIG_OID_REGISTRY
-  FILES:=$(LINUX_DIR)/lib/oid_registry.ko
-  AUTOLOAD:=$(call AutoProbe,oid-registry)
-endef
-
-define KernelPackage/lib-oid-registry/description
- Kernel module for OID-Registry function support
-endef
-
-$(eval $(call KernelPackage,lib-oid-registry))

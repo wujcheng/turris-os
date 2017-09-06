@@ -13,6 +13,7 @@ proto_dhcpv6_init_config() {
 	proto_config_add_string 'reqopts:list(uinteger)'
 	proto_config_add_string 'noslaaconly:bool'
 	proto_config_add_string 'forceprefix:bool'
+	proto_config_add_string 'extendprefix:bool'
 	proto_config_add_string 'norelease:bool'
 	proto_config_add_string 'ip6prefix:ip6addr'
 	proto_config_add_string iface_dslite
@@ -28,14 +29,16 @@ proto_dhcpv6_init_config() {
 	proto_config_add_boolean delegate
 	proto_config_add_int "soltimeout"
 	proto_config_add_boolean fakeroutes
+	proto_config_add_boolean sourcefilter
+	proto_config_add_boolean keep_ra_dnslifetime
 }
 
 proto_dhcpv6_setup() {
 	local config="$1"
 	local iface="$2"
 
-	local reqaddress reqprefix clientid reqopts noslaaconly forceprefix norelease ip6prefix iface_dslite iface_map iface_464xlat ifaceid userclass vendorclass delegate zone_dslite zone_map zone_464xlat zone soltimeout fakeroutes
-	json_get_vars reqaddress reqprefix clientid reqopts noslaaconly forceprefix norelease ip6prefix iface_dslite iface_map iface_464xlat ifaceid userclass vendorclass delegate zone_dslite zone_map zone_464xlat zone soltimeout fakeroutes
+	local reqaddress reqprefix clientid reqopts noslaaconly forceprefix extendprefix norelease ip6prefix iface_dslite iface_map iface_464xlat ifaceid userclass vendorclass delegate zone_dslite zone_map zone_464xlat zone soltimeout fakeroutes sourcefilter keep_ra_dnslifetime
+	json_get_vars reqaddress reqprefix clientid reqopts noslaaconly forceprefix extendprefix norelease ip6prefix iface_dslite iface_map iface_464xlat ifaceid userclass vendorclass delegate zone_dslite zone_map zone_464xlat zone soltimeout fakeroutes sourcefilter keep_ra_dnslifetime
 
 
 	# Configure
@@ -59,6 +62,8 @@ proto_dhcpv6_setup() {
 
 	[ -n "$userclass" ] && append opts "-u$userclass"
 
+	[ "$keep_ra_dnslifetime" = "1" ] && append opts "-L"
+
 	for opt in $reqopts; do
 		append opts "-r$opt"
 	done
@@ -76,6 +81,8 @@ proto_dhcpv6_setup() {
 	[ -n "$zone_464xlat" ] && proto_export "ZONE_464XLAT=$zone_464xlat"
 	[ -n "$zone" ] && proto_export "ZONE=$zone"
 	[ "$fakeroutes" != "0" ] && proto_export "FAKE_ROUTES=1"
+	[ "$sourcefilter" = "0" ] && proto_export "NOSOURCEFILTER=1"
+	[ "$extendprefix" = "1" ] && proto_export "EXTENDPREFIX=1"
 
 	proto_export "INTERFACE=$config"
 	proto_run_command "$config" odhcp6c \

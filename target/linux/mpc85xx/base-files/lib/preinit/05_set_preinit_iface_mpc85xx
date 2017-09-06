@@ -7,16 +7,16 @@
 
 mpc85xx_set_preinit_iface() {
 	case $(mpc85xx_board_name) in
-        tl-wdr4900-v1)
-                ifname=eth0
-                ;;
-	rtrs*)
-		ifname=eth2
-		;;
-	*)
-		ifname=eth0
-		;;
-        esac
+		tl-wdr4900-v1)
+			ifname=eth0
+			;;
+		rtrs*)
+			ifname=eth2
+			;;
+		*)
+			ifname=eth0
+			;;
+	esac
 }
 
 boot_hook_add preinit_main mpc85xx_set_preinit_iface

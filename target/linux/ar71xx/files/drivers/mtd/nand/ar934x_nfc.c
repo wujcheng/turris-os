@@ -983,13 +983,10 @@ ar934x_nfc_read_page(struct mtd_info *mtd, struct nand_chip *chip,
 
 static int
 ar934x_nfc_write_page_raw(struct mtd_info *mtd, struct nand_chip *chip,
-			  const u8 *buf, int oob_required)
+			  const u8 *buf, int oob_required, int page)
 {
 	struct ar934x_nfc *nfc = mtd_to_ar934x_nfc(mtd);
-	int page;
 	int len;
-
-	page = nfc->seqin_page_addr;
 
 	nfc_dbg(nfc, "write_page_raw: page:%d oob:%d\n", page, oob_required);
 
@@ -1006,13 +1003,10 @@ ar934x_nfc_write_page_raw(struct mtd_info *mtd, struct nand_chip *chip,
 
 static int
 ar934x_nfc_write_page(struct mtd_info *mtd, struct nand_chip *chip,
-		      const u8 *buf, int oob_required)
+		      const u8 *buf, int oob_required, int page)
 {
 	struct ar934x_nfc *nfc = mtd_to_ar934x_nfc(mtd);
-	int page;
 	int err;
-
-	page = nfc->seqin_page_addr;
 
 	nfc_dbg(nfc, "write_page: page:%d oob:%d\n", page, oob_required);
 
@@ -1376,7 +1370,7 @@ ar934x_nfc_probe(struct platform_device *pdev)
 	}
 
 	init_waitqueue_head(&nfc->irq_waitq);
-	ret = request_irq(nfc->irq, ar934x_nfc_irq_handler, IRQF_DISABLED,
+	ret = request_irq(nfc->irq, ar934x_nfc_irq_handler, 0,
 			  dev_name(&pdev->dev), nfc);
 	if (ret) {
 		dev_err(&pdev->dev, "requast_irq failed, err:%d\n", ret);
@@ -1435,6 +1429,10 @@ ar934x_nfc_probe(struct platform_device *pdev)
 	switch (pdata->ecc_mode) {
 	case AR934X_NFC_ECC_SOFT:
 		nand->ecc.mode = NAND_ECC_SOFT;
+		break;
+
+	case AR934X_NFC_ECC_SOFT_BCH:
+		nand->ecc.mode = NAND_ECC_SOFT_BCH;
 		break;
 
 	case AR934X_NFC_ECC_HW:

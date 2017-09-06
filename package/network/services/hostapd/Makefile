@@ -11,9 +11,7 @@ PKG_RELEASE:=4
 
 PKG_SOURCE_URL:=http://w1.fi/hostap.git
 PKG_SOURCE_PROTO:=git
-PKG_VERSION:=2016-12-19
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
+PKG_SOURCE_DATE:=2016-12-19
 PKG_SOURCE_VERSION:=ad02e79d12fd70ed6bd5fbaf64001a2851e5bb7b
 PKG_MIRROR_HASH:=7a0983f004b156d46911765c113754a4c00f56fb889430620bbd061b3b1fcf33
 
@@ -74,7 +72,7 @@ DRIVER_MAKEOPTS= \
 	CONFIG_DRIVER_WEXT=$(CONFIG_DRIVER_WEXT_SUPPORT) \
 
 ifeq ($(LOCAL_VARIANT),full)
-  DRIVER_MAKEOPTS += CONFIG_IEEE80211W=$(CONFIG_DRIVER_11W_SUPPORT) CONFIG_FST=y
+  DRIVER_MAKEOPTS += CONFIG_IEEE80211W=$(CONFIG_DRIVER_11W_SUPPORT)
 endif
 
 ifneq ($(LOCAL_TYPE),hostapd)
@@ -244,7 +242,7 @@ define Package/eapol-test
   SECTION:=net
   CATEGORY:=Network
   VARIANT:=supplicant-full
-  DEPENDS:=$(DRV_DEPENDS)
+  DEPENDS:=$(DRV_DEPENDS) +WPA_SUPPLICANT_OPENSSL:libopenssl
 endef
 
 
@@ -259,7 +257,6 @@ ifneq ($(wildcard $(PKG_BUILD_DIR)/.config_*),$(subst .configured_,.config_,$(ST
 endif
 
 define Build/Configure
-	$(CP) -r files/src/*  $(PKG_BUILD_DIR)
 	$(Build/Configure/rebuild)
 	$(if $(wildcard ./files/hostapd-$(CONFIG_VARIANT).config), \
 		$(CP) ./files/hostapd-$(CONFIG_VARIANT).config $(PKG_BUILD_DIR)/hostapd/.config \
@@ -321,19 +318,19 @@ define Build/Compile/wpad
 endef
 
 define Build/Compile/hostapd
-	$(call Build/RunMake,hostapd, \
+	+$(call Build/RunMake,hostapd, \
 		hostapd hostapd_cli \
 	)
 endef
 
 define Build/Compile/supplicant
-	$(call Build/RunMake,wpa_supplicant, \
+	+$(call Build/RunMake,wpa_supplicant, \
 		wpa_cli wpa_supplicant \
 	)
 endef
 
 define Build/Compile/supplicant-full
-	$(call Build/RunMake,wpa_supplicant, \
+	+$(call Build/RunMake,wpa_supplicant, \
 		eapol_test \
 	)
 endef
@@ -353,7 +350,7 @@ endef
 
 define Package/hostapd-common/install
 	$(INSTALL_DIR) $(1)/lib/netifd
-	$(INSTALL_DATA) ./files/netifd.sh $(1)/lib/netifd/hostapd.sh
+	$(INSTALL_DATA) ./files/hostapd.sh $(1)/lib/netifd/hostapd.sh
 endef
 
 define Package/hostapd/install

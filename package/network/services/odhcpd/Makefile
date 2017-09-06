@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013 OpenWrt.org
+# Copyright (C) 2013-2015 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -8,16 +8,15 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=odhcpd
-PKG_VERSION:=2015-05-21
-PKG_RELEASE=$(PKG_SOURCE_VERSION)
+PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
-PKG_SOURCE_URL:=git://github.com/sbyx/odhcpd.git
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_VERSION:=2ebf6c8216287983779c8ec6597d30893b914a7c
+PKG_SOURCE_URL=$(LEDE_GIT)/project/odhcpd.git
+PKG_SOURCE_DATE:=2017-04-28
+PKG_SOURCE_VERSION:=9268ca65d6e000b6cd4ed72d4a8fa427dada6f06
+PKG_MIRROR_HASH:=3c375291de38034f0965c92e509ca17788d3b31fe13abbc8f541b2e2452bc7fe
 
-PKG_MAINTAINER:=Steven Barth <steven@midlink.org>
+PKG_MAINTAINER:=Hans Dedecker <dedeckeh@gmail.com>
 PKG_LICENSE:=GPL-2.0
 
 include $(INCLUDE_DIR)/package.mk
@@ -34,7 +33,7 @@ define Package/odhcpd
   SECTION:=net
   CATEGORY:=Network
   TITLE:=OpenWrt DHCP/DHCPv6(-PD)/RA Server & Relay
-  DEPENDS:=+libubox +libuci +libubus
+  DEPENDS:=+libubox +libuci +libubus +libnl-tiny
   PROVIDES:=dhcp-server
 endef
 

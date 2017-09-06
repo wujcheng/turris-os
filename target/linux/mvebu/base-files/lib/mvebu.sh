@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright (C) 2013-2015 OpenWrt.org
+# Copyright (C) 2016 LEDE-Project.org
 #
 
 MVEBU_BOARD_NAME=
@@ -40,6 +41,12 @@ mvebu_board_detect() {
 	*"Linksys WRT1900ACv2")
 		name="armada-385-linksys-cobra"
 		;;
+	*"Linksys WRT1900ACS")
+		name="armada-385-linksys-shelby"
+		;;
+	*"Linksys WRT3200ACM")
+		name="armada-385-linksys-rango"
+		;;
 	*"Marvell Armada 385 Access Point Development Board")
 		name="armada-385-db-ap"
 		;;
@@ -48,6 +55,9 @@ mvebu_board_detect() {
 		;;
 	*"Turris Omnia")
 		name="rtrom01"
+		;;
+	*"SolidRun Clearfog A1")
+		name="armada-388-clearfog"
 		;;
 	esac
 

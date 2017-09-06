@@ -33,11 +33,17 @@ set_state() {
 	spw303v)
 		status_led="spw303v:green:power+adsl"
 		;;
+	vh4032n)
+		status_led="VH4032N:red:power"
+		;;
 	vr-3025un)
 		status_led="VR-3025un:green:power"
 		;;
 	vr-3025u)
 		status_led="VR-3025u:green:power"
+		;;
+	vr-3026e)
+		status_led="VR-3026e:green:power"
 		;;
 	wap-5813n)
 		status_led="WAP-5813n:green:power"
@@ -55,7 +61,7 @@ set_state() {
 	cpva642)
 		status_led="CPVA642:green:power:"
 		;;
-	ct536_ct5621)
+	ct-536p_5621t)
 		status_led="CT536_CT5621:green:power"
 		;;
 	cvg834g)
@@ -67,8 +73,14 @@ set_state() {
 	dgnd3700v1_dgnd3800b)
 		status_led="DGND3700v1_3800B:green:power"
 		;;
+	evg2000)
+		status_led="EVG2000:green:power"
+		;;
 	fast2504n)
 		status_led="fast2504n:green:ok"
+		;;
+	fast2704n)
+		status_led2="F@ST2704N:red:power"
 		;;
 	fast2704v2)
 		status_led="F@ST2704V2:green:power"
@@ -93,8 +105,14 @@ set_state() {
 	hg655b)
 		status_led="HW65x:green:power"
 		;;
+	livebox1)
+		status_led="Livebox1:red:adsl-fail-power"
+		;;
 	p870hw-51a_v2)
 		status_led="P870HW-51a:green:power"
+		;;
+	r5010un_v2)
+		status_led="R5010UNv2:green:power"
 		;;
 	rta770bw)
 		status_led="RTA770BW:green:diag"
