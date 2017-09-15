@@ -39,7 +39,8 @@ make_defconfig() {
 # Patch feeds
 pushd patches
 for feed in *; do
-	pushd $feed
+	[ -d "$feed" ] || continue
+	pushd "$feed"
 	for patch in *; do
 		pushd ../../feeds/$feed
 		patch -p1 < ../../patches/$feed/$patch
