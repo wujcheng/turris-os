@@ -1,5 +1,7 @@
---- a/drivers/net/phy/phy_device.c
-+++ b/drivers/net/phy/phy_device.c
+Index: linux-4.4.88/drivers/net/phy/phy_device.c
+===================================================================
+--- linux-4.4.88.orig/drivers/net/phy/phy_device.c
++++ linux-4.4.88/drivers/net/phy/phy_device.c
 @@ -1213,7 +1213,7 @@ int genphy_config_init(struct phy_device
  	return 0;
  }
@@ -9,16 +11,16 @@
  {
  	/* Do nothing for now */
  	return 0;
-@@ -1448,7 +1448,7 @@ static struct phy_driver genphy_driver[]
+@@ -1450,7 +1450,7 @@ static struct phy_driver genphy_driver[]
  	.phy_id		= 0xffffffff,
  	.phy_id_mask	= 0xffffffff,
  	.name		= "Generic PHY",
--	.soft_reset	= genphy_soft_reset,
+-	.soft_reset	= genphy_no_soft_reset,
 +	.soft_reset	= no_soft_reset,
  	.config_init	= genphy_config_init,
  	.features	= PHY_GBIT_FEATURES | SUPPORTED_MII |
  			  SUPPORTED_AUI | SUPPORTED_FIBRE |
-@@ -1463,7 +1463,7 @@ static struct phy_driver genphy_driver[]
+@@ -1465,7 +1465,7 @@ static struct phy_driver genphy_driver[]
  	.phy_id         = 0xffffffff,
  	.phy_id_mask    = 0xffffffff,
  	.name           = "Generic 10G PHY",
