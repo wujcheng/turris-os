@@ -7,7 +7,8 @@ src-git packages https://github.com/openwrt/packages.git^5fdb011c357c3b79bbb19d9
 src-git routing https://github.com/openwrt-routing/packages.git^a4eae82c155079a4372e4b910ec733f77288b717
 src-git management https://github.com/openwrt-management/packages.git^3a3acd14c77156f8f67cf491263a027a2d483bfd
 src-git telephony https://github.com/openwrt/telephony.git^5ece22d67e79cdd5dffa9301df61393442f21314
-src-git printing https://github.com/miska/openwrt-printing-packages.git^9c305e35dcf4c620c01ad426c61d9c720dbd91ed
+#src-git printing https://github.com/miska/openwrt-printing-packages.git^9c305e35dcf4c620c01ad426c61d9c720dbd91ed
+src-git printing https://github.com/ja-pa/openwrt-printing-packages.git^2ab80b2e752774b1913bb07f0b295f428b709c6e
 src-git openwisp https://github.com/openwisp/openwisp-config.git^d6eb1a342dc781089aacabe9935a916d1c34aecc
 
 #src-git oldpackages http://git.openwrt.org/14.07/packages.git
