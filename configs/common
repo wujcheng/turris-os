@@ -310,3 +310,6 @@ CONFIG_BUSYBOX_CONFIG_FEATURE_EJECT_SCSI=y
 
 # Logger (fix for busybox logger)
 CONFIG_PACKAGE_logger=y
+
+#test uas
+CONFIG_PACKAGE_kmod-usb-storage-uas=y
