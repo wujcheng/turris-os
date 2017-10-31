@@ -313,3 +313,16 @@ CONFIG_PACKAGE_logger=y
 
 #test uas
 CONFIG_PACKAGE_kmod-usb-storage-uas=y
+
+
+#test icu
+CONFIG_PACKAGE_icu=y
+
+#test shadowsocks
+CONFIG_PACKAGE_shadowsocks-client=y
+CONFIG_PACKAGE_shadowsocks-libev-config=y
+CONFIG_PACKAGE_shadowsocks-libev-ss-local=y
+CONFIG_PACKAGE_shadowsocks-libev-ss-redir=y
+CONFIG_PACKAGE_shadowsocks-libev-ss-rules=y
+CONFIG_PACKAGE_shadowsocks-libev-ss-server=y
+CONFIG_PACKAGE_shadowsocks-libev-ss-tunnel=y
