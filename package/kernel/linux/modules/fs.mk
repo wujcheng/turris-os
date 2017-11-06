@@ -146,7 +146,6 @@ define KernelPackage/fs-cramfs
   TITLE:=Compressed RAM/ROM filesystem support
   DEPENDS:=+kmod-lib-zlib
   DEPENDS:=+kmod-lib-zlib-inflate
->>>>>>> v17.01.2
   KCONFIG:= \
 	CONFIG_CRAMFS
   FILES:=$(LINUX_DIR)/fs/cramfs/cramfs.ko
