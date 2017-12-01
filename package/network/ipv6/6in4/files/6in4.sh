@@ -11,7 +11,7 @@
 
 proto_6in4_update() {
 	sh -c '
-		timeout=5
+		local timeout=5
 
 		(while [ $((timeout--)) -gt 0 ]; do
 			sleep 1
