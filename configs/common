@@ -329,9 +329,16 @@ CONFIG_PACKAGE_shadowsocks-libev-ss-server=y
 CONFIG_PACKAGE_shadowsocks-libev-ss-tunnel=y
 CONFIG_PACKAGE_sed=y
 
-
 CONFIG_PACKAGE_stunnel=y
 
 #enable luci wireguard app
 CONFIG_PACKAGE_luci-app-wireguard=y
 CONFIG_PACKAGE_luci-proto-wireguard=y
+
+#enable mwan3
+CONFIG_PACKAGE_luci-app-mwan3=y
+CONFIG_PACKAGE_mwan3=y
+
+#ssdeep and hashdeep
+CONFIG_PACKAGE_ssdeep=y
+CONFIG_PACKAGE_hashdeep=y
