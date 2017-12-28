@@ -342,3 +342,6 @@ CONFIG_PACKAGE_mwan3=y
 #ssdeep and hashdeep
 CONFIG_PACKAGE_ssdeep=y
 CONFIG_PACKAGE_hashdeep=y
+
+#enable stem library
+CONFIG_PACKAGE_python-stem=y
