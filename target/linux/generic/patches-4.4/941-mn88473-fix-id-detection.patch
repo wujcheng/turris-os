@@ -1,0 +1,13 @@
+Index: linux-4.4.114/drivers/staging/media/mn88473/mn88473.c
+===================================================================
+--- linux-4.4.114.orig/drivers/staging/media/mn88473/mn88473.c
++++ linux-4.4.114/drivers/staging/media/mn88473/mn88473.c
+@@ -492,7 +492,7 @@ static int mn88473_probe(struct i2c_clie
+ 
+ 	dev_dbg(&client->dev, "chip id=%02x\n", uitmp);
+ 
+-	if (uitmp != 0x03) {
++	if (uitmp != 0x03 && uitmp != 0x08) {
+ 		ret = -ENODEV;
+ 		goto err_regmap_0_regmap_exit;
+ 	}
