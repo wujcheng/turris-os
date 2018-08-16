@@ -81,6 +81,7 @@ else
 	Install("rainbow", { priority = 40 })
 end
 
+Install("turris-webapps", { priority = 40 })
 Install("foris", "foris-diagnostics-plugin", { priority = 40 })
 Install('userlists', { priority = 40 })
 if for_l10n then
